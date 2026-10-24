@@ -1,0 +1,100 @@
+@import "tailwindcss";
+
+/*
+  TrialCave design system (B14.1).
+  Vault Teal primary, Soft Indigo clinic accents, Warm Sand donor highlights,
+  Sage/Amber/Coral for pass/unknown/fail. Light theme only for the demo.
+*/
+
+:root {
+  --radius: 1rem;
+
+  /* Brand + surface tokens (B14.1) */
+  --tc-primary: #2f7d7a; /* Vault Teal */
+  --tc-primary-soft: #e6f2f1;
+  --tc-secondary: #5b6cb8; /* Soft Indigo */
+  --tc-secondary-soft: #eceef8;
+  --tc-accent: #e9dcc7; /* Warm Sand */
+  --tc-success: #5e9c63; /* Sage */
+  --tc-warning: #c9922e; /* Amber */
+  --tc-danger: #c0614f; /* Muted Coral */
+  --tc-bg: #f7f8fa;
+  --tc-surface: #ffffff;
+  --tc-text: #1f2a44;
+  --tc-muted: #6b7280;
+  --tc-border: #e3e6ec;
+
+  /* shadcn semantic mapping */
+  --background: var(--tc-bg);
+  --foreground: var(--tc-text);
+  --card: var(--tc-surface);
+  --card-foreground: var(--tc-text);
+  --popover: var(--tc-surface);
+  --popover-foreground: var(--tc-text);
+  --primary: var(--tc-primary);
+  --primary-foreground: #ffffff;
+  --secondary: var(--tc-secondary);
+  --secondary-foreground: #ffffff;
+  --muted: var(--tc-primary-soft);
+  --muted-foreground: var(--tc-muted);
+  --accent: var(--tc-accent);
+  --accent-foreground: var(--tc-text);
+  --destructive: var(--tc-danger);
+  --destructive-foreground: #ffffff;
+  --border: var(--tc-border);
+  --input: var(--tc-border);
+  --ring: var(--tc-primary);
+}
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 8px);
+  --radius-md: calc(var(--radius) - 4px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* TrialCave-specific status colors, usable as e.g. text-tc-success */
+  --color-tc-primary: var(--tc-primary);
+  --color-tc-primary-soft: var(--tc-primary-soft);
+  --color-tc-secondary: var(--tc-secondary);
+  --color-tc-secondary-soft: var(--tc-secondary-soft);
+  --color-tc-accent: var(--tc-accent);
+  --color-tc-success: var(--tc-success);
+  --color-tc-warning: var(--tc-warning);
+  --color-tc-danger: var(--tc-danger);
+  --color-tc-surface: var(--tc-surface);
+  --color-tc-muted: var(--tc-muted);
+  --color-tc-border: var(--tc-border);
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+  }
+}
