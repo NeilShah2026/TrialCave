@@ -8,8 +8,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { getMyPatient, getSessionUser } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { loadMatches } from "@/lib/patient";
+import { loadMatches, loadProfile } from "@/lib/patient";
 import { STATUS_LABEL, STATUS_VARIANT, scorePct } from "@/lib/match-status";
+import { translateText } from "@/lib/ai/translate";
+import { LanguageSwitcher } from "@/components/language-switcher";
+import { TranslatedText } from "@/components/translated-text";
+import { GettingThere } from "@/components/getting-there";
+import { sortMassachusettsFirst, type TrialLocation } from "@/lib/ctgov/normalize";
+import type { Language } from "@/lib/i18n/languages";
 import { MatchDetailClient, type DetailCriterion } from "./match-detail-client";
 
 export const dynamic = "force-dynamic";
@@ -25,10 +31,28 @@ export default async function MatchDetailPage({ params }: { params: Promise<{ tr
 
   const { data: trial } = await admin
     .from("trials")
-    .select("title, source, is_demo, plain_summary, what_is_involved, nct_id")
+    .select("title, source, is_demo, plain_summary, what_is_involved, nct_id, logistics, locations")
     .eq("id", trialId)
     .maybeSingle();
   if (!trial) notFound();
+
+  const profile = await loadProfile(patient.id);
+  const lang = (profile?.preferredLanguage ?? "en") as Language;
+
+  const { data: patientRow } = await admin
+    .from("patients")
+    .select("town, travel_radius_miles")
+    .eq("id", patient.id)
+    .maybeSingle();
+
+  // Translate the summary into the patient's language (cached).
+  const summaryText = trial.plain_summary ?? "";
+  const summaryTr = summaryText ? await translateText(summaryText, lang) : { text: "", machine: false };
+
+  // Nearest MA site for getting-there.
+  const locations = sortMassachusettsFirst((trial.locations ?? []) as TrialLocation[]);
+  const nearestSite = locations[0] ?? null;
+  const trialLogistics = (trial.logistics ?? {}) as { visit_count?: number; duration_weeks?: number; remote_option?: boolean; compensation_mentioned?: boolean };
 
   const details: DetailCriterion[] = (match?.details ?? []).map((d) => ({
     ...d,
@@ -55,6 +79,9 @@ export default async function MatchDetailPage({ params }: { params: Promise<{ tr
           {trial.is_demo ? "Demo study (fictional)" : "ClinicalTrials.gov"}
           {match?.distanceMiles != null ? ` · ${match.distanceMiles} mi` : ""}
         </p>
+        <div className="mt-3">
+          <LanguageSwitcher current={lang} />
+        </div>
 
         {match ? (
           <div className="mt-3 flex items-center gap-3">
@@ -63,14 +90,32 @@ export default async function MatchDetailPage({ params }: { params: Promise<{ tr
           </div>
         ) : null}
 
-        {trial.plain_summary ? (
+        {summaryText ? (
           <Card className="mt-4">
             <CardContent className="pt-6">
               <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">In plain words</h2>
-              <p className="mt-2 text-sm">{trial.plain_summary}</p>
+              <p className="mt-2 text-sm">
+                <TranslatedText original={summaryText} translated={summaryTr.text} machine={summaryTr.machine} />
+              </p>
               {trial.what_is_involved ? <p className="mt-2 text-sm text-muted-foreground">{trial.what_is_involved}</p> : null}
             </CardContent>
           </Card>
+        ) : null}
+
+        {nearestSite?.facility ? (
+          <div className="mt-4">
+            <GettingThere
+              patientTown={patientRow?.town ?? ""}
+              travelRadiusMiles={patientRow?.travel_radius_miles ?? 25}
+              facility={nearestSite.facility}
+              city={nearestSite.city}
+              distanceMiles={match?.distanceMiles ?? null}
+              visitCount={trialLogistics.visit_count ?? null}
+              durationWeeks={trialLogistics.duration_weeks ?? null}
+              remoteOption={trialLogistics.remote_option ?? null}
+              compensationMentioned={trialLogistics.compensation_mentioned ?? null}
+            />
+          </div>
         ) : null}
 
         {!match ? (
