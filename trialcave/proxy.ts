@@ -81,9 +81,10 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // Run on app routes; skip static assets, images, and the inbound webhook
-  // (which does its own basic-auth check, B6.3).
+  // Run on app routes; skip static assets and images.
+  // DECISION: inbound-email ingestion (Postmark webhook) is deprecated for now,
+  // so there is no /api/inbound route to exclude. Uploads are the ingestion path.
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|api/inbound).*)",
+    "/((?!_next/static|_next/image|favicon.ico).*)",
   ],
 };

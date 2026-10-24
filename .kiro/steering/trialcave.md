@@ -4,6 +4,28 @@ These rules apply to every task in the TrialCave build. The source of truth is
 `TrialCave_Master_Plan.md` (v1.0). Precedence on any conflict: **Part C > Part B > Part A**.
 `SPEC.md` (the old "TrialPass" draft) is superseded and must not be followed.
 
+## Team decisions that override the plan (most recent first)
+
+- **Inbound email is DEPRECATED.** Do not build the Postmark webhook
+  (`/api/inbound/postmark`), the "Add records by email" settings panel, the
+  `simulateForwardedEmail` action, or the inbound-email env vars
+  (`POSTMARK_INBOUND_ADDRESS`, `INBOUND_WEBHOOK_SECRET`). Uploads are the only
+  ingestion path. The `inbox_token` / `email_ingest_enabled` columns and the
+  `email_ingest` consent type may remain in the schema unused.
+- **Condition-agnostic trial library.** The ClinicalTrials.gov sync loads ALL
+  recruiting Massachusetts trials (any condition), not just type 2 diabetes.
+  `CTGOV_CONDITION` is blank by default. The library, trial detail, parsing, and
+  matching must work for any condition. The deterministic matching vocabulary
+  (B9.1) stays cardiometabolic-first by design (B20): trials outside it still load
+  and match, leaning on AI-estimated and question-based criterion checks. Keep the
+  vocabulary structured and extensible; never hard-code the app to one condition.
+- **Equity layer (EJ / SVI), town-level only.** MassGIS EJ2020 and CDC/ATSDR SVI
+  data may be joined to a patient's `town` ONLY — aggregate block-group / tract
+  figures up to municipality. Never store tract or block-group per patient (Part C,
+  B0 rule 11: no precise location). Use it for clinic equity views and Enclave
+  stratification at community level, never to gate a patient's matches or single
+  anyone out. Cite MassGIS / CDC as sources.
+
 ## Build rules (from B0 — apply everywhere)
 
 1. **Patient data never reaches the browser of anyone but that patient.** All
