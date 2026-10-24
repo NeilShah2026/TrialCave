@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { getMyPatient, getSessionUser } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { logAudit } from "@/lib/audit";
+import { withinRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 import { ingestUpload, type UploadFile } from "@/lib/ingest/upload";
 import { runMatchesForPatient } from "@/lib/matching/run";
 import { renderDemoPdf } from "@/lib/demo/documents";
@@ -36,6 +37,15 @@ export async function uploadDocument(formData: FormData): Promise<UploadResult> 
     }
   }
   if (files.length === 0) return { ok: false, error: "Choose at least one file or photo." };
+
+  const allowed = await withinRateLimit({
+    table: "source_documents",
+    column: "patient_id",
+    value: patient.id,
+    windowMs: 60 * 60 * 1000,
+    max: RATE_LIMITS.uploadPerHour,
+  });
+  if (!allowed) return { ok: false, error: "You've uploaded a lot recently. Try again in a bit." };
 
   try {
     const outcome = await ingestUpload({ patientId: patient.id, userId: user.userId, files });
