@@ -1,0 +1,1191 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TrialCave home</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://mcp.figma.com/mcp/html-to-design/capture.js" async></script>
+<style>
+  /*
+    TrialCave home, prototype v3.
+    One idea per screen, and every screen fills the window. Sizes scale with
+    both width and height so each section fits from a phone up to a large monitor.
+    Two moving pieces: the Massachusetts map (zooms where you point) and the
+    pinned example of Maria finding a trial.
+  */
+  :root {
+    --ink: #1f2a44;
+    --ink-2: #444e63;
+    --muted: #5c6577;
+    --teal: #2f7d7a;
+    --teal-ink: #23605d;
+    --teal-soft: #e3f0ef;
+    --mint: #8fe3da;
+    --night: #0d2624;
+    --night-2: #153634;
+    --night-line: #2f5e5a;
+    --night-text: #c3d7d4;
+    --mist: #f2f5f4;
+    --line: #dde3e1;
+    --sand: #e9dcc7;
+    --indigo: #4d5ea8;
+    --indigo-soft: #eceef8;
+    --sage: #5e9c63;
+    --sage-ink: #3d7042;
+    --amber: #c9922e;
+    --amber-ink: #835a10;
+    --coral-ink: #9c4434;
+    --font: "Atkinson Hyperlegible Next", system-ui, sans-serif;
+
+    --header-h: 80px;
+    --gutter: clamp(16px, 4vw, 72px);
+    --wrap: 1320px;
+    /* Type and spacing scale with the smaller of width and height, so a short laptop screen still fits. */
+    --title: clamp(32px, min(4.3vw, 7vh), 68px);
+    --lede: clamp(18px, min(1.45vw, 2.5vh), 23px);
+    --space: clamp(20px, 4vh, 48px);
+  }
+  @media (min-width: 1800px) { :root { --wrap: 1520px; } }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; scroll-padding-top: var(--header-h); }
+  body { margin: 0; background: #fff; color: var(--ink); font-family: var(--font); font-size: clamp(17px, 1.2vw, 20px); line-height: 1.55; -webkit-font-smoothing: antialiased; }
+  h1, h2, h3, h4, p { margin: 0; }
+  a { color: inherit; }
+  button { font-family: inherit; }
+  [hidden] { display: none !important; }
+  svg.i { width: 22px; height: 22px; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .wrap { width: 100%; max-width: calc(var(--wrap) + 2 * var(--gutter)); margin: 0 auto; padding: 0 var(--gutter); }
+  :focus-visible { outline: 3px solid var(--teal); outline-offset: 3px; border-radius: 8px; }
+  .on-dark :focus-visible { outline-color: var(--mint); }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  /* Buttons: every main action is at least 56px tall and says exactly what happens. */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+    min-height: clamp(54px, 6.5vh, 62px); padding: 0 28px; border-radius: 14px; border: 2px solid transparent;
+    font: 700 clamp(17px, 1.3vw, 20px)/1.2 var(--font); text-decoration: none; cursor: pointer; text-align: center;
+    transition: background-color .15s, border-color .15s, color .15s;
+  }
+  .btn-primary { background: var(--teal); color: #fff; }
+  .btn-primary:hover { background: var(--teal-ink); }
+  .btn-outline { background: transparent; color: var(--ink); border-color: #b9c3c1; }
+  .btn-outline:hover { border-color: var(--ink); }
+  .btn-light { background: #fff; color: var(--ink); }
+  .btn-light:hover { background: var(--mint); }
+  .btn-mint { background: var(--mint); color: var(--night); }
+  .btn-mint:hover { background: #b5efe8; }
+  .btn-ghost-light { background: transparent; color: #fff; border-color: rgba(255,255,255,.55); }
+  .btn-ghost-light:hover { border-color: #fff; background: rgba(255,255,255,.08); }
+  .btn-sand { background: var(--sand); color: var(--ink); }
+  .btn-sand:hover { background: #f3e9d8; }
+  .btn-indigo { background: var(--indigo); color: #fff; }
+  .btn-small { min-height: 48px; padding: 0 20px; font-size: 17px; border-radius: 12px; }
+  .btn-block { width: 100%; }
+
+  /* Header */
+  .site-header { position: fixed; inset: 0 0 auto; z-index: 50; height: var(--header-h); color: #fff; transition: background-color .2s, color .2s, box-shadow .2s; }
+  .site-header.scrolled { background: var(--night); box-shadow: 0 1px 0 var(--night-line); }
+  .site-header.solid { background: #fff; color: var(--ink); box-shadow: 0 1px 0 var(--line); }
+  .site-header .wrap { height: 100%; display: flex; align-items: center; gap: clamp(16px, 2.4vw, 40px); max-width: none; }
+  .brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 800; font-size: 23px; letter-spacing: -0.01em; }
+  .brand svg { width: 30px; height: 30px; color: var(--mint); }
+  .solid .brand svg { color: var(--teal); }
+  .nav { display: flex; gap: clamp(18px, 2vw, 34px); font-size: 18px; font-weight: 600; }
+  .nav a { text-decoration: none; opacity: .92; white-space: nowrap; }
+  .nav a:hover { text-decoration: underline; text-underline-offset: 6px; }
+  .header-actions { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+  .lang-wrap { position: relative; }
+  .lang { display: inline-flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 12px; border: 0; background: none; color: inherit; font: 600 17px var(--font); cursor: pointer; border-radius: 10px; }
+  .lang:hover { background: rgba(127,127,127,.14); }
+  .lang .chev { width: 18px; height: 18px; }
+  .lang-menu { position: absolute; right: 0; top: 54px; min-width: 220px; background: #fff; color: var(--ink); border-radius: 14px; padding: 8px; box-shadow: 0 20px 40px -16px rgba(13,38,36,.4), 0 0 0 1px var(--line); display: none; }
+  .lang-menu.open { display: block; }
+  .lang-menu a { display: block; padding: 12px 14px; border-radius: 10px; text-decoration: none; font-size: 18px; }
+  .lang-menu a:hover, .lang-menu a[aria-current] { background: var(--teal-soft); }
+  .login { text-decoration: none; font-weight: 700; font-size: 18px; padding: 12px 14px; border-radius: 10px; white-space: nowrap; }
+  .login:hover { background: rgba(127,127,127,.14); }
+  .site-header .btn-signup { background: #fff; color: var(--ink); white-space: nowrap; }
+  .site-header.solid .btn-signup { background: var(--teal); color: #fff; }
+  .menu-btn { display: none; align-items: center; gap: 8px; min-height: 48px; padding: 0 16px; border-radius: 12px; border: 2px solid currentColor; background: none; color: inherit; font: 700 17px var(--font); cursor: pointer; }
+  .mobile-menu { display: none; }
+
+  /* Every segment fills the screen and centers its one idea. */
+  .seg {
+    min-height: 100vh; min-height: 100svh; display: flex; align-items: center; position: relative;
+    padding: calc(var(--header-h) + var(--space)) 0 var(--space);
+  }
+  .seg-title { font-size: var(--title); line-height: 1.07; font-weight: 800; letter-spacing: -0.025em; text-wrap: balance; }
+  .seg-lede { margin-top: clamp(12px, 2vh, 20px); font-size: var(--lede); line-height: 1.5; color: var(--ink-2); max-width: 34em; }
+  .on-dark { background: var(--night); color: #fff; }
+  .on-dark .seg-lede { color: var(--night-text); }
+
+  /* 1. Opening screen */
+  .hero { min-height: 100vh; min-height: 100svh; background: var(--night); color: #fff; position: relative; overflow: hidden; display: flex; align-items: center; }
+  .hero canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .hero.zoomable { cursor: zoom-in; }
+  .hero > .wrap { position: relative; z-index: 2; pointer-events: none; }
+  .hero-copy { max-width: min(600px, 44vw); padding-top: calc(var(--header-h) / 2); }
+  .hero-copy > * { pointer-events: auto; }
+  .hero h1 { font-size: clamp(44px, min(5.8vw, 9.4vh), 96px); line-height: 1.0; font-weight: 800; letter-spacing: -0.03em; text-wrap: balance; }
+  .tagline { margin-top: clamp(16px, 3vh, 28px); font-size: clamp(21px, min(2.1vw, 3.4vh), 30px); font-weight: 700; color: var(--mint); display: flex; flex-wrap: wrap; gap: 0 .4em; }
+  .hero-sub { margin-top: clamp(10px, 2vh, 18px); font-size: var(--lede); color: var(--night-text); max-width: 28em; }
+  .hero-actions { margin-top: clamp(22px, 4vh, 40px); display: flex; flex-wrap: wrap; gap: 14px; }
+  .map-label { position: absolute; z-index: 2; transform: translate(18px, -50%); font-size: 16px; font-weight: 700; color: #fff; background: rgba(13,38,36,.85); padding: 6px 12px; border-radius: 999px; white-space: nowrap; opacity: 0; transition: opacity .3s; pointer-events: none; }
+  .map-label.show { opacity: 1; }
+  .map-label.flip { transform: translate(calc(-100% - 18px), -50%); }
+  .map-bar { position: absolute; z-index: 3; right: var(--gutter); bottom: clamp(16px, 3.5vh, 32px); display: flex; align-items: center; flex-wrap: wrap; justify-content: flex-end; gap: 10px 18px; font-size: 15px; color: var(--night-text); }
+  .map-bar span { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: #5fa9a2; display: inline-block; }
+  .dot.near { background: var(--mint); outline: 2px solid rgba(143,227,218,.35); outline-offset: 2px; }
+  .zoom-hint { color: #fff; font-weight: 600; }
+  .zoom-hint svg { width: 18px; height: 18px; color: var(--mint); }
+  .pause { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 14px; border-radius: 999px; border: 1.5px solid rgba(255,255,255,.35); background: rgba(13,38,36,.6); color: #fff; font: 600 15px var(--font); cursor: pointer; }
+  .pause svg { width: 16px; height: 16px; }
+  .scroll-cue { position: absolute; z-index: 2; left: var(--gutter); bottom: clamp(16px, 3.5vh, 32px); display: flex; align-items: center; gap: 8px; font-size: 15px; color: var(--night-text); text-decoration: none; }
+  .scroll-cue svg { width: 22px; height: 22px; }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .intro .hero h1, .intro .tagline span, .intro .hero-sub, .intro .hero-actions, .intro .scroll-cue {
+      animation: rise .7s cubic-bezier(.2,.7,.2,1) both;
+    }
+    .intro .hero h1 { animation-delay: .25s; }
+    .intro .tagline span:nth-child(1) { animation-delay: 1.0s; }
+    .intro .tagline span:nth-child(2) { animation-delay: 1.35s; }
+    .intro .tagline span:nth-child(3) { animation-delay: 1.7s; }
+    .intro .hero-sub { animation-delay: 2.0s; }
+    .intro .hero-actions { animation-delay: 2.2s; }
+    .intro .scroll-cue { animation-delay: 2.8s; }
+    @keyframes rise { from { opacity: 0; transform: translateY(18px); } }
+  }
+
+  /* 2. For patients: two ways to find a trial */
+  .patients { background: var(--mist); }
+  @media (min-width: 1101px) {
+    .find-head { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 48px; align-items: end; }
+    .find-head .seg-lede { margin-top: 0; padding-bottom: 6px; }
+  }
+  .paths { margin-top: var(--space); display: grid; grid-template-columns: 1fr 1fr; gap: clamp(16px, 2vw, 28px); align-items: stretch; }
+  .path { border-radius: 26px; padding: clamp(20px, 3vh, 36px) clamp(20px, 2.4vw, 40px); display: flex; flex-direction: column; background: #fff; box-shadow: 0 1px 0 var(--line), 0 30px 60px -40px rgba(13,38,36,.35); }
+  .path-head { display: flex; align-items: flex-start; gap: 16px; }
+  .path-icon { width: 52px; height: 52px; border-radius: 16px; display: grid; place-items: center; flex: none; background: var(--teal-soft); color: var(--teal-ink); }
+  .path-icon svg { width: 26px; height: 26px; }
+  .path h3 { font-size: clamp(23px, min(2vw, 3.4vh), 32px); font-weight: 800; line-height: 1.2; letter-spacing: -0.01em; }
+  .path .path-sub { margin-top: 4px; font-size: clamp(16px, 1.15vw, 19px); color: var(--ink-2); }
+  .badge { display: inline-flex; vertical-align: middle; align-items: center; gap: 6px; margin-left: 6px; font-size: 15px; letter-spacing: 0; font-weight: 700; padding: 4px 12px; border-radius: 999px; background: var(--mist); color: var(--teal-ink); }
+  .path-body { margin-top: clamp(14px, 2.2vh, 24px); display: grid; gap: clamp(12px, 1.8vh, 18px); }
+  .path-foot { margin-top: auto; padding-top: clamp(14px, 2.2vh, 24px); }
+
+  .field label { display: block; font-size: 17px; font-weight: 700; margin-bottom: 8px; }
+  .field .input { display: flex; align-items: center; gap: 12px; min-height: clamp(54px, 6.6vh, 62px); padding: 0 16px; border: 2px solid #c9d1cf; border-radius: 14px; color: var(--muted); background: #fff; }
+  .field .input:focus-within { border-color: var(--teal); box-shadow: 0 0 0 4px var(--teal-soft); }
+  .field input { border: 0; outline: 0; font: 400 19px var(--font); color: var(--ink); width: 100%; min-width: 0; background: transparent; }
+  .field input::placeholder { color: #7a8292; }
+  .fields-2 { display: grid; grid-template-columns: 1.3fr 1fr; gap: 14px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .chips-label { font-size: 16px; color: var(--muted); margin-right: 4px; }
+  .chip-btn { min-height: 44px; padding: 0 16px; border-radius: 999px; border: 2px solid var(--line); background: var(--mist); color: var(--ink); font: 600 16px var(--font); cursor: pointer; }
+  .chip-btn:hover { border-color: var(--teal); }
+  .chip-btn[aria-pressed="true"] { background: var(--teal-soft); border-color: var(--teal); color: var(--teal-ink); }
+
+  .path-elig { background: var(--night); color: #fff; box-shadow: 0 30px 60px -36px rgba(13,38,36,.6); }
+  .path-elig .path-icon { background: var(--night-2); color: var(--mint); }
+  .path-elig .path-sub { color: var(--night-text); }
+  .path-elig .badge { background: var(--night-2); color: var(--mint); }
+  .tally { border-radius: 18px; background: var(--night-2); padding: 16px 18px; }
+  .tally-cap { font-size: 15px; color: var(--night-text); font-weight: 600; }
+  .tally-row { display: grid; grid-template-columns: 14px 1fr auto; align-items: center; gap: 12px; padding: clamp(5px, 1vh, 9px) 0; font-size: clamp(16px, 1.15vw, 19px); font-weight: 600; }
+  .tally-row + .tally-row { border-top: 1px solid var(--night-line); }
+  .tally-row i { width: 12px; height: 12px; border-radius: 50%; }
+  .tally-row b { font-size: 22px; font-variant-numeric: tabular-nums; }
+
+  /* 3. Maria's example: pinned, four steps as you scroll */
+  .story { position: relative; height: 440vh; background: #fff; }
+  .story-pin { position: sticky; top: 0; height: 100vh; height: 100svh; display: flex; align-items: center; padding-top: var(--header-h); }
+  .story-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: clamp(32px, 5vw, 80px); align-items: center; }
+  .who { display: inline-flex; align-items: center; gap: 12px; font-size: 17px; font-weight: 700; color: var(--teal-ink); margin-bottom: 12px; }
+  .avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--sand); color: var(--ink); display: grid; place-items: center; font-weight: 800; font-size: 17px; }
+  .story .seg-title { font-size: clamp(30px, min(3.4vw, 5.6vh), 54px); }
+  .steps { list-style: none; margin: clamp(16px, 3vh, 32px) 0 0; padding: 0; display: grid; gap: 4px; }
+  .step-btn { display: grid; grid-template-columns: 44px 1fr; gap: 16px; align-items: start; width: 100%; text-align: left; padding: clamp(10px, 1.6vh, 16px) 16px clamp(10px, 1.6vh, 16px) 12px; border: 0; border-radius: 16px; background: transparent; color: var(--ink-2); cursor: pointer; transition: background-color .3s; }
+  .step-btn:hover { background: #f7f9f8; }
+  .step-btn.active { background: var(--mist); color: var(--ink); }
+  .step-num { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; font-size: 19px; background: var(--teal-soft); color: var(--teal-ink); transition: background-color .3s, color .3s; flex: none; }
+  .step-btn.active .step-num { background: var(--teal); color: #fff; }
+  .step-btn h3 { font-size: clamp(19px, min(1.6vw, 2.8vh), 24px); font-weight: 800; line-height: 1.25; margin-top: 9px; }
+  .step-btn p { margin-top: 6px; font-size: clamp(16px, 1.15vw, 19px); color: var(--ink-2); display: none; }
+  .step-btn.active p { display: block; }
+  .story-cta { margin-top: clamp(14px, 2.4vh, 26px); display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+  .story-cta small { font-size: 15px; color: var(--muted); }
+
+  .stage { position: relative; height: clamp(440px, 70vh, 640px); }
+  .scene { position: absolute; inset: 0; display: flex; align-items: center; opacity: 0; transform: translateY(24px); transition: opacity .45s, transform .45s cubic-bezier(.2,.7,.2,1); pointer-events: none; }
+  .scene.active { opacity: 1; transform: none; pointer-events: auto; }
+  .panel { width: 100%; background: #fff; border-radius: 24px; padding: clamp(18px, 3vh, 30px); box-shadow: 0 0 0 1px var(--line), 0 40px 80px -48px rgba(13,38,36,.45); }
+  .scene-step { display: none; align-items: center; gap: 14px; font-size: 21px; font-weight: 800; line-height: 1.25; margin: -2px 0 16px; padding-bottom: 16px; border-bottom: 2px solid var(--line); }
+  .scene-step .step-num { width: 40px; height: 40px; font-size: 18px; background: var(--teal); color: #fff; }
+  .panel-kicker { font-size: 15px; font-weight: 700; color: var(--muted); }
+  .panel h4 { margin-top: 4px; font-size: clamp(20px, min(1.7vw, 3vh), 25px); font-weight: 800; line-height: 1.3; }
+
+  .searchbar { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 12px; border: 2px solid var(--line); font-size: 17px; margin-top: 12px; }
+  .searchbar svg { color: var(--muted); width: 20px; height: 20px; }
+  .searchbar b { font-weight: 700; }
+  .results { margin-top: 12px; display: grid; }
+  .result { display: grid; grid-template-columns: 1fr auto; gap: 4px 14px; padding: clamp(10px, 1.5vh, 14px) 0; border-top: 1px solid #eef1f0; }
+  .result:first-child { border-top: 0; }
+  .result .t { font-size: 17px; font-weight: 700; line-height: 1.35; }
+  .result .m { grid-column: 1; display: flex; align-items: center; gap: 6px; font-size: 15px; color: var(--muted); }
+  .result .m svg { width: 16px; height: 16px; }
+  .result .q { grid-row: 1 / span 2; grid-column: 2; align-self: center; font-size: 15px; font-weight: 700; color: var(--amber-ink); background: #fbf3e3; border-radius: 999px; padding: 4px 12px; white-space: nowrap; }
+  .more { margin-top: 8px; font-size: 15px; color: var(--muted); }
+
+  .mail-row { display: grid; grid-template-columns: 70px 1fr; gap: 8px; padding: 11px 0; border-bottom: 1px solid #eef1f0; font-size: 17px; }
+  .mail-row b { color: var(--muted); font-weight: 600; }
+  .attach { margin-top: 16px; display: inline-flex; align-items: center; gap: 10px; padding: 11px 16px; border-radius: 12px; background: var(--mist); font-size: 16px; font-weight: 600; }
+  .attach svg { color: var(--teal); }
+  .forward-to { margin-top: 18px; padding: 16px 18px; border-radius: 16px; background: var(--teal-soft); }
+  .forward-to small { display: block; font-size: 15px; color: var(--teal-ink); font-weight: 700; }
+  .forward-to strong { display: block; margin-top: 2px; font-size: clamp(17px, 1.4vw, 21px); word-break: break-all; }
+  .or-upload { margin-top: 14px; font-size: 16px; color: var(--ink-2); }
+
+  .found { margin-top: 14px; display: grid; gap: 10px; }
+  .found-row { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 14px; padding: 12px 16px; border-radius: 14px; border: 2px solid var(--line); }
+  .found-row .what { font-size: 18px; font-weight: 700; }
+  .found-row .src { font-size: 15px; color: var(--muted); }
+  .tag { display: inline-block; font-size: 14px; font-weight: 700; padding: 2px 10px; border-radius: 999px; background: var(--mist); color: var(--ink-2); margin-bottom: 4px; }
+  .confirm { min-height: 44px; padding: 0 16px; border-radius: 10px; border: 2px solid var(--teal); background: #fff; color: var(--teal-ink); font: 700 16px var(--font); }
+  .confirm.done { background: var(--teal); color: #fff; }
+  .found-row.hl { border-color: var(--teal); background: #f6fbfa; }
+
+  .sumrow { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .pill { display: inline-flex; align-items: center; gap: 8px; min-height: 34px; padding: 0 14px; border-radius: 999px; font-size: 15px; font-weight: 700; white-space: nowrap; }
+  .pill::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: currentColor; }
+  .pill-yes { background: #e6f1e7; color: var(--sage-ink); }
+  .pill-maybe { background: #fbf3e3; color: var(--amber-ink); }
+  .pill-no { background: #f6e8e5; color: var(--coral-ink); }
+  .match-card { margin-top: 14px; border: 2px solid var(--line); border-radius: 16px; padding: 14px 16px; }
+  .match-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+  .match-top .t { font-size: 17px; font-weight: 800; line-height: 1.3; }
+  .match-top .m { font-size: 14px; color: var(--muted); }
+  .crit { list-style: none; margin: 8px 0 0; padding: 0; }
+  .crit li { display: grid; grid-template-columns: 24px 1fr; gap: 10px; padding: 8px 0; border-top: 1px solid #eef1f0; }
+  .crit li:first-child { border-top: 0; }
+  .crit svg { width: 22px; height: 22px; color: var(--sage); margin-top: 1px; }
+  .crit .unk svg { color: var(--amber); }
+  .crit-title { font-size: 16px; font-weight: 700; line-height: 1.35; }
+  .crit-why { font-size: 15px; color: var(--ink-2); }
+  .crit .unk .crit-why { color: var(--amber-ink); }
+  .crit li.hl { background: var(--teal-soft); margin: 0 -10px; padding: 8px 10px; border-radius: 10px; border-top-color: transparent; }
+  .fine { margin-top: 10px; font-size: 14px; color: var(--muted); }
+  @media (prefers-reduced-motion: no-preference) {
+    .scene .crit li, .scene .result { opacity: 0; transform: translateX(10px); transition: opacity .35s, transform .35s; }
+    .scene.active .crit li, .scene.active .result { opacity: 1; transform: none; }
+    .scene.active :is(.crit li, .result):nth-child(1) { transition-delay: .15s; }
+    .scene.active :is(.crit li, .result):nth-child(2) { transition-delay: .3s; }
+    .scene.active :is(.crit li, .result):nth-child(3) { transition-delay: .45s; }
+    .scene.active :is(.crit li, .result):nth-child(4) { transition-delay: .6s; }
+  }
+  .story-progress { position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: var(--mist); }
+  .story-progress div { height: 100%; width: 0; background: var(--teal); }
+
+  /* 4. You decide who contacts you */
+  .decide { background: var(--teal-soft); }
+  .decide-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 560px); gap: clamp(32px, 6vw, 96px); align-items: center; }
+  .clinic-sees { margin-top: var(--space); display: flex; align-items: center; gap: 22px; }
+  .clinic-sees .num { font-size: clamp(56px, 6vw, 88px); font-weight: 800; line-height: 1; color: var(--teal-ink); letter-spacing: -0.03em; }
+  .clinic-sees p { font-size: clamp(17px, 1.3vw, 20px); color: var(--ink-2); max-width: 18em; }
+  .clinic-sees b { color: var(--ink); }
+  .try { font-size: 17px; font-weight: 700; color: var(--teal-ink); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .invite { background: #fff; border-radius: 24px; padding: clamp(20px, 3.4vh, 32px); box-shadow: 0 40px 80px -48px rgba(13,38,36,.5); }
+  .invite-from { font-size: 15px; color: var(--muted); font-weight: 600; }
+  .invite h3 { font-size: clamp(20px, min(1.7vw, 3vh), 26px); font-weight: 800; line-height: 1.3; margin-top: 4px; }
+  .invite fieldset { border: 0; margin: clamp(12px, 2vh, 20px) 0 0; padding: 0; }
+  .invite legend { font-size: 17px; font-weight: 700; margin-bottom: 4px; }
+  .check { display: flex; align-items: center; gap: 14px; min-height: clamp(46px, 6vh, 56px); font-size: 18px; cursor: pointer; border-bottom: 1px solid #eef1f0; }
+  .check:last-child { border-bottom: 0; }
+  .check input { appearance: none; -webkit-appearance: none; width: 28px; height: 28px; margin: 0; border-radius: 8px; border: 2px solid #9aa5a3; display: grid; place-items: center; cursor: pointer; flex: none; background: #fff; }
+  .check input:checked { background: var(--teal); border-color: var(--teal); }
+  .check input:checked::after { content: ""; width: 7px; height: 13px; border: solid #fff; border-width: 0 3px 3px 0; transform: translateY(-2px) rotate(45deg); }
+  .invite-actions { display: grid; grid-template-columns: 1.5fr 1fr; gap: 12px; margin-top: clamp(14px, 2.4vh, 24px); }
+  .invite-result { margin-top: 12px; font-size: 17px; font-weight: 600; color: var(--teal-ink); min-height: 1.6em; }
+
+  /* 5. Three promises */
+  .promise-list { list-style: none; margin: 0; padding: 0; width: 100%; }
+  .promise { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(20px, 4vw, 64px); align-items: baseline; padding: clamp(22px, 4.4vh, 44px) 0; border-top: 2px solid var(--line); }
+  .promise:last-child { border-bottom: 2px solid var(--line); }
+  .promise h2 { font-size: clamp(40px, min(5.2vw, 9vh), 88px); line-height: 1; font-weight: 800; letter-spacing: -0.035em; }
+  .promise h2 .n { color: var(--teal); }
+  .promise p { font-size: var(--lede); color: var(--ink-2); }
+  .promise a { display: inline-flex; margin-top: 10px; font-size: 18px; font-weight: 700; color: var(--teal-ink); text-underline-offset: 5px; min-height: 44px; align-items: center; }
+  @media (prefers-reduced-motion: no-preference) {
+    .reveal { opacity: 0; transform: translateY(28px); transition: opacity .7s, transform .7s cubic-bezier(.2,.7,.2,1); }
+    .reveal.in { opacity: 1; transform: none; }
+  }
+
+  /* 6. Data donation: text and diagram sized to fit one screen */
+  .donate-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(28px, 5vw, 80px); align-items: center; }
+  .optional { margin-top: clamp(12px, 2vh, 20px); display: inline-flex; align-items: center; gap: 10px; font-size: clamp(16px, 1.2vw, 19px); color: #fff; font-weight: 600; background: var(--night-2); padding: 10px 16px; border-radius: 12px; }
+  .optional svg { color: var(--mint); }
+  .donate-facts { list-style: none; margin: clamp(16px, 3vh, 32px) 0 0; padding: 0; display: grid; gap: clamp(8px, 1.6vh, 14px); }
+  .donate-facts li { display: grid; grid-template-columns: 26px 1fr; gap: 14px; font-size: clamp(16px, min(1.3vw, 2.3vh), 20px); color: var(--night-text); }
+  .donate-facts svg { color: var(--mint); margin-top: 3px; }
+  .donate-facts b { color: #fff; }
+  .donate-actions { margin-top: clamp(18px, 3.6vh, 36px); display: flex; flex-wrap: wrap; align-items: center; gap: 14px 28px; }
+  .text-link { font-size: 18px; font-weight: 700; color: #fff; text-underline-offset: 5px; min-height: 48px; display: inline-flex; align-items: center; }
+  .enclave-fig { width: 100%; height: auto; max-height: calc(100svh - var(--header-h) - 2 * var(--space)); display: block; }
+  .enclave-fig .donor, .enclave-fig .bar { fill: var(--mint); }
+  .enclave-fig .ghost { fill: none; stroke: #4c8e89; stroke-width: 1.5; }
+  @media (prefers-reduced-motion: no-preference) {
+    .enclave-fig .donor { transition: transform 1.1s cubic-bezier(.4,0,.2,1); }
+    .enclave-fig:not(.run) .donor { transform: translate(var(--dx), var(--dy)); }
+    .enclave-fig .bar { transform-box: fill-box; transform-origin: bottom; transition: transform .7s cubic-bezier(.2,.7,.2,1); }
+    .enclave-fig:not(.run) .bar { transform: scaleY(0); }
+    .enclave-fig.run .bar { transition-delay: 1.3s; }
+    .enclave-fig.run .bar:nth-of-type(2) { transition-delay: 1.45s; }
+    .enclave-fig.run .bar:nth-of-type(3) { transition-delay: 1.6s; }
+    .enclave-fig .later { transition: opacity .5s 1.9s; }
+    .enclave-fig:not(.run) .later { opacity: 0; }
+  }
+
+  /* 7. Clinics */
+  .clinics { background: var(--indigo-soft); }
+  .clinics .inner { max-width: 940px; margin: 0 auto; text-align: center; }
+  .clinics .seg-lede { margin-left: auto; margin-right: auto; }
+  .clinics .for { font-size: 19px; font-weight: 700; color: var(--indigo); margin-bottom: 14px; }
+  .clinics .btn { margin-top: var(--space); }
+
+  /* 8. Footer, with help always at the bottom */
+  .site-footer { background: var(--ink); color: #d5dae4; padding: clamp(48px, 8vh, 88px) 0 48px; }
+  .help { display: grid; grid-template-columns: 1fr auto; gap: 32px; align-items: center; padding-bottom: 48px; border-bottom: 1px solid #39445e; }
+  .help h2 { font-size: clamp(28px, 2.6vw, 40px); font-weight: 800; color: #fff; letter-spacing: -0.02em; }
+  .help p { margin-top: 8px; font-size: clamp(17px, 1.3vw, 20px); max-width: 32em; }
+  .help-actions { display: flex; flex-wrap: wrap; gap: 14px; }
+  .help .btn-outline { color: #fff; border-color: #6b7690; }
+  .help .btn-outline:hover { border-color: #fff; }
+  .foot-cols { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 40px; padding: 44px 0; }
+  .foot-cols h3 { font-size: 17px; font-weight: 700; color: #fff; margin-bottom: 10px; }
+  .foot-cols ul { list-style: none; margin: 0; padding: 0; }
+  .foot-cols li a { display: inline-flex; min-height: 40px; align-items: center; font-size: 18px; text-decoration: none; color: #d5dae4; }
+  .foot-cols li a:hover { color: #fff; text-decoration: underline; }
+  .foot-cols .brand { color: #fff; }
+  .foot-cols .brand svg { color: var(--mint); }
+  .foot-legal { font-size: 16px; color: #aab2c3; max-width: 60em; }
+
+  /* Tablet */
+  @media (max-width: 1100px) {
+    .nav, .login, .site-header .btn-signup { display: none; }
+    .menu-btn { display: inline-flex; }
+    .mobile-menu { position: fixed; inset: var(--header-h) 0 auto; background: #fff; color: var(--ink); padding: 12px var(--gutter) 28px; box-shadow: 0 30px 40px -20px rgba(0,0,0,.3); z-index: 49; }
+    .mobile-menu.open { display: block; }
+    .mobile-menu a.mlink { display: flex; align-items: center; min-height: 60px; font-size: 22px; font-weight: 700; text-decoration: none; border-bottom: 1px solid var(--line); }
+    .mobile-menu .btn { width: 100%; margin-top: 16px; }
+    .hero { align-items: flex-start; }
+    .hero-copy { max-width: 640px; padding-bottom: 120px; }
+    .story { height: auto; }
+    .story-pin { position: static; height: auto; padding: calc(var(--header-h) + var(--space)) 0 var(--space); }
+    .story-grid, .decide-grid, .donate-grid { grid-template-columns: 1fr; }
+    .steps, .story-progress { display: none; }
+    .stage { height: auto; display: grid; gap: 20px; }
+    .scene { position: static; opacity: 1; transform: none; }
+    .scene :is(.crit li, .result) { opacity: 1 !important; transform: none !important; }
+    .scene-step { display: flex; }
+    .story-cta { margin-top: 24px; }
+    .enclave-fig { max-width: 620px; }
+  }
+  @media (max-width: 860px) {
+    .paths { grid-template-columns: 1fr; }
+  }
+  /* Phone */
+  @media (max-width: 720px) {
+    :root { --header-h: 68px; --title: clamp(30px, 8.4vw, 40px); }
+    .site-header .wrap { gap: 8px; }
+    .brand { font-size: 21px; }
+    .lang .lang-name { display: none; }
+    .hero { align-items: flex-start; }
+    .hero-copy { max-width: none; padding: calc(var(--header-h) + min(64vw, 270px) + 76px) 0 56px; }
+    .hero h1 { font-size: clamp(38px, 11vw, 52px); }
+    .hero-actions .btn, .donate-actions .btn, .help-actions .btn, .story-cta .btn { width: 100%; }
+    .map-bar { left: var(--gutter); right: var(--gutter); top: calc(var(--header-h) + min(64vw, 270px) + 14px); bottom: auto; justify-content: space-between; gap: 8px 12px; font-size: 14px; }
+    .map-bar > span:not(.zoom-hint) { display: none; }
+    .pause .pause-long { display: none; }
+    .scroll-cue { display: none; }
+    .fields-2 { grid-template-columns: 1fr; }
+    .path { border-radius: 22px; }
+    .invite-actions { grid-template-columns: 1fr; }
+    .promise { grid-template-columns: 1fr; gap: 10px; }
+    .help { grid-template-columns: 1fr; }
+    .foot-cols { grid-template-columns: 1fr 1fr; }
+    .clinics .inner { text-align: left; }
+  }
+
+  /* Capture mode for Figma: every state at rest. */
+  .capture .reveal { opacity: 1 !important; transform: none !important; }
+  .capture .story { height: auto; }
+  .capture .story-pin { position: static; height: auto; padding: calc(var(--header-h) + 48px) 0 64px; }
+  .capture .stage { height: auto; display: grid; gap: 24px; }
+  .capture .scene { position: static; opacity: 1; transform: none; }
+  .capture .scene :is(.crit li, .result) { opacity: 1; transform: none; }
+  .capture .step-btn p { display: block; }
+  .capture .story-progress { display: none; }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-vault" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/><path d="m7.9 7.9 2.7 2.7"/><circle cx="16.5" cy="7.5" r=".5" fill="currentColor"/><path d="m13.4 10.6 2.7-2.7"/><circle cx="7.5" cy="16.5" r=".5" fill="currentColor"/><path d="m7.9 16.1 2.7-2.7"/><circle cx="16.5" cy="16.5" r=".5" fill="currentColor"/><path d="m13.4 13.4 2.7 2.7"/><circle cx="12" cy="12" r="2"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></symbol>
+  <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+  <symbol id="i-zoom" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/><path d="M11 8v6"/><path d="M8 11h6"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></symbol>
+  <symbol id="i-clipboard" viewBox="0 0 24 24"><rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M6 4l14 8-14 8Z"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></symbol>
+  <symbol id="i-hand" viewBox="0 0 24 24"><path d="M18 11V6a2 2 0 0 0-4 0v5"/><path d="M14 10V4a2 2 0 0 0-4 0v6"/><path d="M10 10.5V6a2 2 0 0 0-4 0v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/></symbol>
+  <symbol id="i-gift" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></symbol>
+</svg>
+
+<header class="site-header" id="header">
+  <div class="wrap">
+    <a class="brand" href="#top"><svg class="i"><use href="#i-vault"/></svg>TrialCave</a>
+    <nav class="nav" aria-label="Main">
+      <a href="#find">Find a trial</a>
+      <a href="#how">How it works</a>
+      <a href="#donate">Data donation</a>
+      <a href="#clinics">For clinics</a>
+    </nav>
+    <div class="header-actions">
+      <div class="lang-wrap">
+        <button class="lang" type="button" id="lang-btn" aria-expanded="false" aria-controls="lang-menu">
+          <svg class="i"><use href="#i-globe"/></svg><span class="lang-name">English</span><svg class="i chev"><use href="#i-chev"/></svg>
+          <span class="sr">Change language</span>
+        </button>
+        <div class="lang-menu" id="lang-menu">
+          <a href="#" aria-current="true">English</a>
+          <a href="#" lang="es">Español</a>
+          <a href="#" lang="pt">Português</a>
+          <a href="#" lang="ht">Kreyòl ayisyen</a>
+        </div>
+      </div>
+      <a class="login" href="#">Log in</a>
+      <a class="btn btn-small btn-signup" href="#">Sign up free</a>
+      <button class="menu-btn" type="button" id="menu-btn" aria-expanded="false" aria-controls="mobile-menu"><svg class="i"><use href="#i-menu"/></svg>Menu</button>
+    </div>
+  </div>
+</header>
+<nav class="mobile-menu" id="mobile-menu" aria-label="Menu">
+  <a class="mlink" href="#find">Find a trial</a>
+  <a class="mlink" href="#how">How it works</a>
+  <a class="mlink" href="#donate">Data donation</a>
+  <a class="mlink" href="#clinics">For clinics</a>
+  <a class="mlink" href="#">Log in</a>
+  <a class="btn btn-primary" href="#">Sign up free</a>
+</nav>
+
+<main id="top">
+  <!-- 1. Opening screen. The map zooms where you point. -->
+  <section class="hero on-dark" id="hero" aria-labelledby="hero-title">
+    <canvas id="map" aria-hidden="true"></canvas>
+    <div class="map-label" id="map-label">Studies near Quincy</div>
+    <div class="wrap">
+      <div class="hero-copy">
+        <h1 id="hero-title">Find a clinical trial that fits you.</h1>
+        <p class="tagline"><span>Your data.</span><span>Your choice.</span><span>Your paycheck.</span></p>
+        <p class="hero-sub">Search 3,145 studies recruiting in Massachusetts, or let TrialCave check your health records and show the ones you're likely eligible for. Both are free.</p>
+        <div class="hero-actions">
+          <a class="btn btn-light" href="#find">Find a trial</a>
+          <a class="btn btn-ghost-light" href="#how">See an example</a>
+        </div>
+      </div>
+    </div>
+    <div class="map-bar">
+      <span class="zoom-hint" id="zoom-hint"><svg class="i"><use href="#i-zoom"/></svg><span id="zoom-hint-text">Point at a city to see its study locations</span></span>
+      <span><i class="dot"></i>A study location</span>
+      <span><i class="dot near"></i>Near you</span>
+      <button class="pause" type="button" id="pause"><svg class="i" id="pause-icon"><use href="#i-pause"/></svg><span id="pause-text">Pause<span class="pause-long"> animation</span></span></button>
+    </div>
+    <a class="scroll-cue" href="#find">Scroll down<svg class="i"><use href="#i-down"/></svg></a>
+  </section>
+
+  <!-- 2. For patients: search, or check what you're eligible for. -->
+  <section class="seg patients" id="find" aria-labelledby="find-title">
+    <div class="wrap">
+      <div class="find-head">
+        <h2 class="seg-title reveal" id="find-title">Have a health condition? Find trials you could join.</h2>
+        <p class="seg-lede reveal">Look up trials for your condition yourself, or let TrialCave check your records and tell you which ones fit.</p>
+      </div>
+
+      <div class="paths">
+        <form class="path reveal" role="search" onsubmit="return false" aria-labelledby="path-search">
+          <div class="path-head">
+            <span class="path-icon"><svg class="i"><use href="#i-search"/></svg></span>
+            <div>
+              <h3 id="path-search">Search for trials <span class="badge">No account needed</span></h3>
+              <p class="path-sub">See every study recruiting near you for your condition.</p>
+            </div>
+          </div>
+          <div class="path-body">
+            <div class="fields-2">
+              <div class="field">
+                <label for="q">Condition</label>
+                <div class="input"><svg class="i"><use href="#i-search"/></svg><input id="q" placeholder="For example, asthma" autocomplete="off"></div>
+              </div>
+              <div class="field">
+                <label for="town">Town or ZIP</label>
+                <div class="input"><svg class="i"><use href="#i-pin"/></svg><input id="town" placeholder="Quincy" autocomplete="postal-code"></div>
+              </div>
+            </div>
+            <div class="chips" id="chips">
+              <span class="chips-label">Common:</span>
+              <button type="button" class="chip-btn" aria-pressed="false">Type 2 diabetes</button>
+              <button type="button" class="chip-btn" aria-pressed="false">Breast cancer</button>
+              <button type="button" class="chip-btn" aria-pressed="false">Asthma</button>
+              <button type="button" class="chip-btn" aria-pressed="false">Alzheimer's</button>
+            </div>
+          </div>
+          <div class="path-foot"><button class="btn btn-primary btn-block" type="submit"><svg class="i"><use href="#i-search"/></svg>Search trials</button></div>
+        </form>
+
+        <div class="path path-elig reveal" aria-labelledby="path-elig">
+          <div class="path-head">
+            <span class="path-icon"><svg class="i"><use href="#i-clipboard"/></svg></span>
+            <div>
+              <h3 id="path-elig">See which trials you're eligible for <span class="badge">Free account</span></h3>
+              <p class="path-sub">Forward your clinic's email or upload a photo of your records. We check them against each study's requirements.</p>
+            </div>
+          </div>
+          <div class="path-body">
+            <div class="tally" aria-label="Example results">
+              <p class="tally-cap">Example: type 2 diabetes, near Quincy</p>
+              <div class="tally-row"><i style="background:var(--sage)"></i>Likely eligible<b>3</b></div>
+              <div class="tally-row"><i style="background:var(--amber)"></i>Need 1 more answer<b>5</b></div>
+              <div class="tally-row"><i style="background:#c0614f"></i>Not eligible<b>6</b></div>
+            </div>
+          </div>
+          <div class="path-foot"><a class="btn btn-mint btn-block" href="#">Check my eligibility</a></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. Example: Maria, from searching to a trial that fits. Pinned, four steps. -->
+  <section class="story" id="how" aria-labelledby="how-title">
+    <div class="story-pin">
+      <div class="wrap">
+        <div class="story-grid">
+          <div>
+            <p class="who"><span class="avatar" aria-hidden="true">M</span>Example: Maria, 54, Quincy</p>
+            <h2 class="seg-title" id="how-title">How Maria found trials she's likely eligible for</h2>
+            <ol class="steps">
+              <li><button class="step-btn active" type="button"><span class="step-num">1</span><span><h3>She searched for her condition</h3><p>Type 2 diabetes, near Quincy. 14 studies came up, but she couldn't tell which ones she could join.</p></span></button></li>
+              <li><button class="step-btn" type="button"><span class="step-num">2</span><span><h3>She forwarded her visit summary</h3><p>Her clinic emails a summary after each visit. She sent it on to her TrialCave address.</p></span></button></li>
+              <li><button class="step-btn" type="button"><span class="step-num">3</span><span><h3>She checked what TrialCave found</h3><p>Her HbA1c, medicines and diagnosis, each linked to the page it came from.</p></span></button></li>
+              <li><button class="step-btn" type="button"><span class="step-num">4</span><span><h3>She saw which trials fit, and why</h3><p>3 studies are likely a fit. Each requirement shows the record it was checked against.</p></span></button></li>
+            </ol>
+            <div class="story-cta">
+              <a class="btn btn-primary" href="#find">Try it with your condition</a>
+              <small>Maria is a fictional example.</small>
+            </div>
+          </div>
+
+          <div class="stage">
+            <div class="scene active">
+              <div class="panel">
+                <p class="scene-step"><span class="step-num">1</span>She searched for her condition</p>
+                <div class="searchbar"><svg class="i"><use href="#i-search"/></svg><b>Type 2 diabetes</b><span>near Quincy</span></div>
+                <h4 style="margin-top:14px">14 studies recruiting near you</h4>
+                <div class="results">
+                  <div class="result"><div class="t">COMPASS-T2D: a weekly injection for type 2 diabetes</div><div class="m"><svg class="i"><use href="#i-pin"/></svg>Boston, 9 miles</div><span class="q">Eligible?</span></div>
+                  <div class="result"><div class="t">KIDNEY-SHIELD: protecting kidneys in people with diabetes</div><div class="m"><svg class="i"><use href="#i-pin"/></svg>Framingham, 22 miles</div><span class="q">Eligible?</span></div>
+                  <div class="result"><div class="t">A diet and coaching program for type 2 diabetes</div><div class="m"><svg class="i"><use href="#i-pin"/></svg>Quincy, 2 miles</div><span class="q">Eligible?</span></div>
+                </div>
+                <p class="more">And 11 more.</p>
+              </div>
+            </div>
+
+            <div class="scene">
+              <div class="panel">
+                <p class="scene-step"><span class="step-num">2</span>She forwarded her visit summary</p>
+                <div class="panel-kicker">Email from her clinic</div>
+                <div class="mail-row"><b>From</b><span>Quincy Family Health</span></div>
+                <div class="mail-row"><b>Subject</b><span>Your After Visit Summary, Oct 20</span></div>
+                <div class="attach"><svg class="i"><use href="#i-file"/></svg>visit-summary.pdf</div>
+                <div class="forward-to"><small>Forwarded to her private TrialCave address</small><strong>maria.k7p@in.trialcave.org</strong></div>
+                <p class="or-upload">No email? A photo of the paper copy works too.</p>
+              </div>
+            </div>
+
+            <div class="scene">
+              <div class="panel">
+                <p class="scene-step"><span class="step-num">3</span>She checked what TrialCave found</p>
+                <div class="panel-kicker">From her Oct 20 visit summary</div>
+                <h4>We found 3 things. Are they right?</h4>
+                <div class="found">
+                  <div class="found-row hl"><div><span class="tag">Lab result</span><div class="what">HbA1c 8.4%</div><div class="src">Page 1, "Results"</div></div><span class="confirm done">Confirmed</span></div>
+                  <div class="found-row"><div><span class="tag">Medicine</span><div class="what">Metformin 1000 mg, twice a day</div><div class="src">Page 2, "Medications"</div></div><span class="confirm">Confirm</span></div>
+                  <div class="found-row"><div><span class="tag">Diagnosis</span><div class="what">Type 2 diabetes</div><div class="src">Page 1, "Problems"</div></div><span class="confirm">Confirm</span></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="scene">
+              <div class="panel">
+                <p class="scene-step"><span class="step-num">4</span>She saw which trials fit, and why</p>
+                <div class="panel-kicker">Her 14 studies, checked</div>
+                <div class="sumrow"><span class="pill pill-yes">3 likely eligible</span><span class="pill pill-maybe">5 need 1 answer</span><span class="pill pill-no">6 not eligible</span></div>
+                <div class="match-card">
+                  <div class="match-top"><div><div class="t">COMPASS-T2D</div><div class="m">Boston Medical Center, 9 miles</div></div><span class="pill pill-yes">Likely eligible</span></div>
+                  <ul class="crit">
+                    <li><svg class="i"><use href="#i-check"/></svg><div><div class="crit-title">Age 18 to 75</div><div class="crit-why">She's 54.</div></div></li>
+                    <li><svg class="i"><use href="#i-check"/></svg><div><div class="crit-title">Type 2 diabetes for at least 1 year</div><div class="crit-why">Diagnosed in 2020.</div></div></li>
+                    <li class="hl"><svg class="i"><use href="#i-check"/></svg><div><div class="crit-title">HbA1c between 7.0% and 10.5%</div><div class="crit-why">Hers is 8.4%, from her Oct 20 visit.</div></div></li>
+                    <li class="unk"><svg class="i"><use href="#i-help"/></svg><div><div class="crit-title">No heart attack in the last 6 months</div><div class="crit-why">Not in her records yet. 1 question to answer.</div></div></li>
+                  </ul>
+                </div>
+                <p class="fine">The study team makes the final decision.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="story-progress" aria-hidden="true"><div id="story-bar"></div></div>
+    </div>
+  </section>
+
+  <!-- 4. Control over contact. -->
+  <section class="seg decide" aria-labelledby="decide-title">
+    <div class="wrap">
+      <div class="decide-grid">
+        <div>
+          <h2 class="seg-title reveal" id="decide-title">You decide who can contact you.</h2>
+          <p class="seg-lede reveal">If a research clinic thinks you might fit their study, they send an invitation through TrialCave. You choose what to share, or say no.</p>
+          <div class="clinic-sees reveal">
+            <div class="num">14</div>
+            <p><b>This is all the clinic sees</b> before you answer: how many people match. It doesn't see your name or your records.</p>
+          </div>
+        </div>
+        <div class="reveal">
+          <p class="try"><svg class="i"><use href="#i-hand"/></svg>Try it. This is an example invitation.</p>
+          <div class="invite">
+            <div class="invite-from">Invitation from Northshore Diabetes Research Center</div>
+            <h3>STRIDE: a walking program for adults with prediabetes</h3>
+            <fieldset>
+              <legend>What do you want to share?</legend>
+              <label class="check"><input type="checkbox" checked data-share>First name and town</label>
+              <label class="check"><input type="checkbox" checked data-share>HbA1c results</label>
+              <label class="check"><input type="checkbox" checked data-share>Email address</label>
+              <label class="check"><input type="checkbox" data-share>Phone number</label>
+              <label class="check"><input type="checkbox" data-share>Medicines</label>
+            </fieldset>
+            <div class="invite-actions">
+              <button class="btn btn-primary" type="button" id="approve">Share 3 items</button>
+              <button class="btn btn-outline" type="button" id="decline">Say no</button>
+            </div>
+            <p class="invite-result" id="invite-result" aria-live="polite"></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. The three promises. -->
+  <section class="seg promises" aria-label="Our promises">
+    <div class="wrap">
+      <ul class="promise-list">
+        <li class="promise reveal">
+          <h2>Your data<span class="n">.</span></h2>
+          <div><p>It's yours. See everything TrialCave holds, download a copy, correct it, or delete it anytime.</p><a href="#">See what TrialCave holds</a></div>
+        </li>
+        <li class="promise reveal">
+          <h2>Your choice<span class="n">.</span></h2>
+          <div><p>Nothing is used without your consent. You approve every clinic that contacts you and every kind of research you support.</p><a href="#">Read how consent works</a></div>
+        </li>
+        <li class="promise reveal">
+          <h2>Your paycheck<span class="n">.</span></h2>
+          <div><p>When your donated data is used in research, you're paid, and you can see what kind of study it helped.</p><a href="#donate">See how Donors are paid</a></div>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 6. Data donation. -->
+  <section class="seg on-dark" id="donate" aria-labelledby="donate-title">
+    <div class="wrap">
+      <div class="donate-grid">
+        <div>
+          <h2 class="seg-title reveal" id="donate-title">Donate your data. Get paid when it's used.</h2>
+          <p class="optional reveal"><svg class="i"><use href="#i-check"/></svg>Donating is optional. You can still find and join trials for free.</p>
+          <ul class="donate-facts reveal">
+            <li><svg class="i"><use href="#i-lock"/></svg><span><b>No one downloads your records.</b> Researchers run approved analyses inside TrialCave's protected Enclave.</span></li>
+            <li><svg class="i"><use href="#i-chart"/></svg><span><b>Only group results leave.</b> Any group smaller than 10 people is hidden.</span></li>
+            <li><svg class="i"><use href="#i-gift"/></svg><span><b>Half of each analysis fee goes to Donors</b> whose data was included.</span></li>
+          </ul>
+          <div class="donate-actions reveal">
+            <a class="btn btn-sand" href="#">Become a Data Donor</a>
+            <a class="text-link" href="#">Read the Donor agreement</a>
+          </div>
+        </div>
+
+        <svg class="enclave-fig reveal" id="enclave" viewBox="0 0 600 440" role="img" aria-labelledby="enclave-desc" font-family="Atkinson Hyperlegible Next, system-ui, sans-serif">
+          <desc id="enclave-desc">Donated data goes into the Enclave. Only group results come out, and groups smaller than 10 people are hidden.</desc>
+          <text x="40" y="44" fill="#c3d7d4" font-size="17" font-weight="700">Donors</text>
+          <rect x="170" y="70" width="230" height="300" rx="28" fill="#153634" stroke="#4c8e89" stroke-width="2"/>
+          <g transform="translate(190 102)">
+            <use href="#i-vault" width="18" height="18" stroke="#a9d3ce" fill="none" stroke-width="2"/>
+            <text x="26" y="14" font-size="17" font-weight="700" fill="#a9d3ce">The Enclave</text>
+          </g>
+          <g id="donors"></g>
+          <path d="M404 220 H446" stroke="#4c8e89" stroke-width="2"/>
+          <path d="M440 214 l8 6 -8 6" fill="none" stroke="#4c8e89" stroke-width="2"/>
+          <text x="460" y="44" fill="#c3d7d4" font-size="17" font-weight="700">Results</text>
+          <g transform="translate(460 120)">
+            <line x1="0" y1="200" x2="120" y2="200" stroke="#2f5e5a" stroke-width="2"/>
+            <rect class="bar" x="6" y="80" width="28" height="120" rx="4"/>
+            <rect class="bar" x="46" y="30" width="28" height="170" rx="4"/>
+            <rect class="bar" x="86" y="110" width="28" height="90" rx="4"/>
+          </g>
+          <g class="later">
+            <rect x="452" y="345" width="136" height="54" rx="10" fill="none" stroke="#c3d7d4" stroke-dasharray="5 5"/>
+            <text x="520" y="368" text-anchor="middle" fill="#c3d7d4" font-size="14" font-weight="700">Group under 10:</text>
+            <text x="520" y="387" text-anchor="middle" fill="#c3d7d4" font-size="14">hidden</text>
+          </g>
+          <text x="285" y="400" text-anchor="middle" fill="#c3d7d4" font-size="15">Records stay inside</text>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7. For research clinics. -->
+  <section class="seg clinics" id="clinics" aria-labelledby="clinics-title">
+    <div class="wrap">
+      <div class="inner">
+        <p class="for reveal">For research clinics</p>
+        <h2 class="seg-title reveal" id="clinics-title">Reach people who already meet your criteria.</h2>
+        <p class="seg-lede reveal">List your study or link its ClinicalTrials.gov entry. See how many TrialCave members match, then send an IRB-approved invitation.</p>
+        <a class="btn btn-indigo reveal" href="#">Set up a clinic account</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- 8. Footer: help is always here, at the bottom. -->
+<footer class="site-footer" id="help">
+  <div class="wrap">
+    <div class="help">
+      <div>
+        <h2>Need help?</h2>
+        <p>Questions about a study, your records, or your account? Our team can help, in English, Spanish, Portuguese or Haitian Creole.</p>
+      </div>
+      <div class="help-actions">
+        <a class="btn btn-light" href="#">Contact support</a>
+        <a class="btn btn-outline" href="#">Read help articles</a>
+      </div>
+    </div>
+    <div class="foot-cols">
+      <div><a class="brand" href="#top"><svg class="i"><use href="#i-vault"/></svg>TrialCave</a></div>
+      <div><h3>For patients</h3><ul><li><a href="#find">Find a trial</a></li><li><a href="#find">Check my eligibility</a></li><li><a href="#donate">Data donation</a></li><li><a href="#">Log in</a></li></ul></div>
+      <div><h3>For clinics</h3><ul><li><a href="#clinics">List a study</a></li><li><a href="#">Clinic log in</a></li></ul></div>
+      <div><h3>Legal</h3><ul><li><a href="#">Privacy notice</a></li><li><a href="#">Terms</a></li><li><a href="#">Donor agreement</a></li></ul></div>
+    </div>
+    <p class="foot-legal">We never sell personal data. TrialCave lists studies from ClinicalTrials.gov and does not give medical advice. Talk with your doctor before joining a study.</p>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var root = document.documentElement;
+  var hash = location.hash + location.search;
+  var capture = /capture|figma/i.test(hash);
+  var zoomDemo = /zoomdemo/i.test(hash);
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (capture) root.classList.add('capture'); else root.classList.add('intro');
+
+  /* Header: dark once you start scrolling, white after the opening screen. */
+  var header = document.getElementById('header');
+  var hero = document.getElementById('hero');
+  function headerState() {
+    header.classList.toggle('scrolled', window.scrollY > 8);
+    header.classList.toggle('solid', hero.getBoundingClientRect().bottom < 90);
+  }
+  headerState();
+  window.addEventListener('scroll', headerState, { passive: true });
+
+  /* Language menu and phone menu. */
+  function toggler(btnId, menuId) {
+    var b = document.getElementById(btnId), m = document.getElementById(menuId);
+    b.addEventListener('click', function () {
+      var open = !m.classList.contains('open');
+      m.classList.toggle('open', open); b.setAttribute('aria-expanded', open);
+    });
+    m.addEventListener('click', function (e) { if (e.target.closest('a')) { m.classList.remove('open'); b.setAttribute('aria-expanded', false); } });
+  }
+  toggler('lang-btn', 'lang-menu');
+  toggler('menu-btn', 'mobile-menu');
+
+  /* Condition chips fill the search box. */
+  var q = document.getElementById('q');
+  document.getElementById('chips').addEventListener('click', function (e) {
+    var b = e.target.closest('.chip-btn'); if (!b) return;
+    this.querySelectorAll('.chip-btn').forEach(function (x) { x.setAttribute('aria-pressed', x === b); });
+    q.value = b.textContent;
+  });
+
+  /* Sections fade up once as they enter the screen. */
+  var revealIO = new IntersectionObserver(function (entries) {
+    entries.forEach(function (en) { if (en.isIntersecting) { en.target.classList.add('in'); revealIO.unobserve(en.target); } });
+  }, { threshold: 0.15 });
+  document.querySelectorAll('.reveal').forEach(function (el) { revealIO.observe(el); });
+
+  /* Maria's example: the pinned screen moves through four steps as you scroll. */
+  var story = document.getElementById('how');
+  var stepBtns = [].slice.call(story.querySelectorAll('.step-btn'));
+  var scenes = [].slice.call(story.querySelectorAll('.scene'));
+  var bar = document.getElementById('story-bar');
+  var N = scenes.length, current = 0;
+  function pinned() { return getComputedStyle(story.querySelector('.story-pin')).position === 'sticky'; }
+  function setStep(i) {
+    if (i === current) return;
+    current = i;
+    stepBtns.forEach(function (b, k) { b.classList.toggle('active', k === i); });
+    scenes.forEach(function (s, k) { s.classList.toggle('active', k === i); });
+  }
+  function storyScroll() {
+    if (!pinned()) return;
+    var r = story.getBoundingClientRect();
+    var p = Math.min(1, Math.max(0, -r.top / (r.height - window.innerHeight)));
+    bar.style.width = (p * 100) + '%';
+    setStep(Math.min(N - 1, Math.floor(p * N)));
+  }
+  window.addEventListener('scroll', storyScroll, { passive: true });
+  window.addEventListener('resize', storyScroll);
+  storyScroll();
+  stepBtns.forEach(function (b, k) {
+    b.addEventListener('click', function () {
+      if (!pinned()) return;
+      var top = story.getBoundingClientRect().top + window.scrollY;
+      var span = story.offsetHeight - window.innerHeight;
+      window.scrollTo({ top: top + span * ((k + 0.5) / N), behavior: reduce ? 'auto' : 'smooth' });
+    });
+  });
+
+  /* Example invitation: the button always says how many items will be shared. */
+  var boxes = [].slice.call(document.querySelectorAll('[data-share]'));
+  var approve = document.getElementById('approve');
+  var result = document.getElementById('invite-result');
+  function checkedCount() { return boxes.filter(function (b) { return b.checked; }).length; }
+  boxes.forEach(function (b) {
+    b.addEventListener('change', function () {
+      var n = checkedCount();
+      approve.textContent = n === 0 ? 'Pick at least 1 item' : 'Share ' + n + (n === 1 ? ' item' : ' items');
+      approve.disabled = n === 0;
+      result.textContent = '';
+    });
+  });
+  approve.addEventListener('click', function () {
+    var n = checkedCount();
+    result.textContent = 'Shared ' + n + (n === 1 ? ' item' : ' items') + ' with Northshore. You can take this back anytime.';
+  });
+  document.getElementById('decline').addEventListener('click', function () {
+    result.textContent = 'You said no. Northshore will not learn who you are.';
+  });
+
+  /* Enclave figure: donor dots travel into the vault, then results come out. */
+  var donors = document.getElementById('donors');
+  var ns = 'http://www.w3.org/2000/svg';
+  var rnd = mulberry(7);
+  for (var i = 0; i < 24; i++) {
+    var col = i % 4, row = Math.floor(i / 4);
+    var tx = 210 + col * 46 + (row % 2) * 20, ty = 150 + row * 34;
+    var sx = 40 + rnd() * 90, sy = 70 + rnd() * 300;
+    var g = document.createElementNS(ns, 'circle');
+    g.setAttribute('class', 'ghost'); g.setAttribute('r', 7); g.setAttribute('cx', sx); g.setAttribute('cy', sy);
+    donors.appendChild(g);
+    var c = document.createElementNS(ns, 'circle');
+    c.setAttribute('class', 'donor'); c.setAttribute('r', 7); c.setAttribute('cx', tx); c.setAttribute('cy', ty);
+    c.style.setProperty('--dx', (sx - tx) + 'px'); c.style.setProperty('--dy', (sy - ty) + 'px');
+    c.style.transitionDelay = (i * 0.025) + 's';
+    donors.appendChild(c);
+  }
+  var enclave = document.getElementById('enclave');
+  if (capture) enclave.classList.add('run');
+  new IntersectionObserver(function (entries, io) {
+    entries.forEach(function (en) { if (en.isIntersecting) { enclave.classList.add('run'); io.disconnect(); } });
+  }, { threshold: 0.4 }).observe(enclave);
+
+  /* ---------- Opening map: Massachusetts drawn from study locations, zooms where you point ---------- */
+  function mulberry(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; var t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+
+  // Simplified state outline (lon, lat), clockwise from the northwest corner.
+  var MA = [[-73.264,42.746],[-72.46,42.727],[-71.90,42.71],[-71.29,42.70],[-71.15,42.81],[-70.93,42.87],[-70.82,42.87],[-70.81,42.72],[-70.60,42.66],[-70.80,42.55],[-70.95,42.45],[-71.03,42.38],[-70.90,42.27],[-70.71,42.17],[-70.64,41.95],[-70.55,41.80],[-70.25,41.75],[-70.02,41.78],[-70.06,41.93],[-70.09,42.03],[-70.19,42.07],[-70.04,42.06],[-69.93,41.86],[-69.94,41.67],[-70.10,41.64],[-70.40,41.62],[-70.64,41.54],[-70.66,41.69],[-70.82,41.60],[-70.93,41.60],[-71.12,41.49],[-71.19,41.66],[-71.35,41.73],[-71.38,42.02],[-71.80,42.01],[-72.50,42.03],[-73.06,42.04],[-73.49,42.05],[-73.50,42.09]];
+  var ISLANDS = [[-70.64,41.40,0.17,0.055],[-70.10,41.27,0.13,0.035]];
+  // [lon, lat, dots, spread, name, label side]
+  var CITIES = [
+    [-71.06,42.355,160,0.055,'Boston',1],[-71.11,42.375,70,0.03,'Cambridge',-1],[-71.80,42.265,60,0.05,'Worcester',1],
+    [-72.59,42.10,50,0.05,'Springfield',1],[-71.32,42.635,26,0.03,'Lowell',1],[-73.25,42.45,14,0.03,'Pittsfield',1],
+    [-70.93,41.64,20,0.03,'New Bedford',1],[-70.28,41.66,14,0.03,'Hyannis',1],[-72.52,42.375,20,0.03,'Amherst',1],
+    [-71.00,42.25,30,0.03,'Quincy',1],[-71.42,42.28,22,0.03,'Framingham',-1],[-70.89,42.52,18,0.03,'Salem',1]
+  ];
+  var HOME = [-71.00, 42.25];
+  var K = Math.cos(42.2 * Math.PI / 180), LON0 = -73.6, LAT1 = 42.92;
+  function proj(lon, lat) { return [(lon - LON0) * K, LAT1 - lat]; }
+  var poly = MA.map(function (p) { return proj(p[0], p[1]); });
+  function inPoly(x, y) {
+    var inside = false;
+    for (var i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+      var xi = poly[i][0], yi = poly[i][1], xj = poly[j][0], yj = poly[j][1];
+      if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) inside = !inside;
+    }
+    return inside;
+  }
+  function inLand(x, y) {
+    if (inPoly(x, y)) return true;
+    for (var k = 0; k < ISLANDS.length; k++) {
+      var c = proj(ISLANDS[k][0], ISLANDS[k][1]);
+      var dx = (x - c[0]) / (ISLANDS[k][2] * K), dy = (y - c[1]) / ISLANDS[k][3];
+      if (dx * dx + dy * dy < 1) return true;
+    }
+    return false;
+  }
+  var R = mulberry(42), dots = [];
+  var W0 = (-69.85 - LON0) * K, H0 = LAT1 - 41.18;
+  var step = 0.034;
+  for (var y = 0; y < H0; y += step) for (var x = 0; x < W0; x += step) {
+    var jx = x + (R() - 0.5) * step * 0.7, jy = y + (R() - 0.5) * step * 0.7;
+    if (inLand(jx, jy)) dots.push({ x: jx, y: jy, r: 1.3, a: 0.42, city: false });
+  }
+  CITIES.forEach(function (c) {
+    var p = proj(c[0], c[1]);
+    for (var n = 0, tries = 0; n < c[2] && tries < c[2] * 6; tries++) {
+      var u = R() || 1e-6, v = R();
+      var rad = Math.sqrt(-2 * Math.log(u)) * c[3];
+      var ang = v * Math.PI * 2;
+      var px = p[0] + Math.cos(ang) * rad * K * 1.2, py = p[1] + Math.sin(ang) * rad;
+      if (inLand(px, py)) { dots.push({ x: px, y: py, r: 1.8, a: 0.78, city: true }); n++; }
+    }
+  });
+  var home = proj(HOME[0], HOME[1]);
+  var nearR = 0.15;
+  dots.forEach(function (d) {
+    d.sx = R(); d.sy = R(); d.ph = R() * Math.PI * 2;
+    var dist = Math.hypot((d.x - home[0]) / K, d.y - home[1]);
+    d.near = d.city && dist < nearR;
+    d.nearDelay = 1900 + dist / nearR * 900 + R() * 200;
+    d.delay = (d.x / W0) * 500;
+  });
+
+  var canvas = document.getElementById('map'), ctx = canvas.getContext('2d');
+  var label = document.getElementById('map-label');
+  var box = { x: 0, y: 0, s: 1 }, cw = 0, ch = 0, wide = true;
+  function layout() {
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    cw = canvas.clientWidth; ch = canvas.clientHeight;
+    canvas.width = cw * dpr; canvas.height = ch * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    var hh = header.offsetHeight, bx, by, bw, bh;
+    wide = cw > 720;
+    if (cw > 1100) { bx = Math.max(cw * 0.43, 590); bw = cw - bx - cw * 0.01; by = hh + ch * 0.03; bh = ch - by - ch * 0.11; }
+    else if (wide) { bx = cw * 0.03; bw = cw * 0.94; by = hh + 12; bh = Math.min(ch * 0.36, 400); }
+    else { bx = 6; bw = cw - 12; by = hh + 8; bh = Math.min(290, cw * 0.7); }
+    var s = Math.min(bw / W0, bh / H0);
+    box = { x: bx + (bw - W0 * s) / 2, y: by + (bh - H0 * s) / 2, s: s, bx: bx, by: by, bw: bw, bh: bh };
+    // Tablet: push the copy below the map.
+    if (cw <= 1100 && wide) document.querySelector('.hero-copy').style.paddingTop = (box.y + H0 * s + 28) + 'px';
+    else if (wide) document.querySelector('.hero-copy').style.paddingTop = '';
+  }
+
+  // Places with enough study locations to react when you point near them. Small towns and empty areas stay still.
+  var HOT = CITIES.filter(function (c) { return c[2] >= 18; }).map(function (c) {
+    var p = proj(c[0], c[1]); return { x: p[0], y: p[1], spread: c[3], name: c[4] };
+  });
+  var ZOOM_MAX = 1.22;            // a gentle zoom toward the city, never more
+  var mx = 0, my = 0, mxT = 0, myT = 0, hasPointer = false;
+  var hot = null, act = 0, actT = 0; // the city being pointed at, and how strongly the map reacts (0 to 1)
+  var zoom = 1, fx = 0, fy = 0;
+  function cityScreen(h) { return [box.x + h.x * box.s, box.y + h.y * box.s]; }
+  function nearestHot(px, py) {
+    var best = null, bd = 1e9;
+    HOT.forEach(function (h) { var c = cityScreen(h), dd = Math.hypot(px - c[0], py - c[1]); if (dd < bd) { bd = dd; best = h; } });
+    if (!best) return null;
+    // Full reaction inside the city's cluster; it builds up as you approach from about twice that distance.
+    var core = Math.max(best.spread * box.s * 2.2, 14 + box.s * 0.05), outer = core * 2.2;
+    var k = Math.min(1, Math.max(0, (outer - bd) / (outer - core)));
+    return { h: best, k: k * k * (3 - 2 * k) };
+  }
+  function tf(x, y) { return [fx + (x - fx) * zoom, fy + (y - fy) * zoom]; }
+
+  function ease(t) { return 1 - Math.pow(1 - t, 3); }
+  var start = performance.now(), running = true, visible = true, raf = 0, pausedAt = 0;
+  var settled = capture || reduce;
+  var lifted = [];
+  function draw(now) {
+    var t = settled ? 99999 : now - start;
+    var tw = running ? now : pausedAt;
+    ctx.clearRect(0, 0, cw, ch);
+    var s = box.s;
+    var zoomed = zoom > 1.002;
+    ctx.save();
+    if (zoomed) {
+      // Keep the map inside its own area so it never runs under the text, header or bottom bar.
+      ctx.beginPath();
+      if (cw > 1100) ctx.rect(box.bx - 30, header.offsetHeight, cw - box.bx + 30, ch - header.offsetHeight - 76);
+      else ctx.rect(0, box.by - 8, cw, box.bh + 16);
+      ctx.clip();
+    }
+    var hb = tf(box.x + home[0] * s, box.y + home[1] * s), hx = hb[0], hy = hb[1];
+    var ringT = Math.min(1, Math.max(0, (t - 1500) / 700));
+    if (ringT > 0) {
+      ctx.beginPath(); ctx.arc(hx, hy, nearR * s * zoom * ease(ringT), 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(143,227,218,' + (0.08 * ringT) + ')'; ctx.fill();
+      ctx.strokeStyle = 'rgba(143,227,218,' + (0.55 * ringT) + ')'; ctx.lineWidth = 1.5; ctx.setLineDash([4, 5]); ctx.stroke(); ctx.setLineDash([]);
+    }
+    var lens = 80 + 30 * act;
+    lifted.length = 0;
+    for (var i = 0; i < dots.length; i++) {
+      var d = dots[i];
+      var p = Math.min(1, Math.max(0, (t - d.delay) / 1300)), e = ease(p);
+      var tx = box.x + d.x * s, ty = box.y + d.y * s;
+      var x = d.sx * cw + (tx - d.sx * cw) * e, y = d.sy * ch + (ty - d.sy * ch) * e;
+      if (zoomed) { var z = tf(x, y); x = z[0]; y = z[1]; }
+      var a = d.a * Math.min(1, p * 1.6);
+      if (d.city && p >= 1 && !settled) a *= 0.78 + 0.22 * Math.sin(tw / 900 + d.ph);
+      var r = d.r;
+      // Dots near the pointer rise toward you, but only while you're near a busy city.
+      if (act > 0.01 && p >= 1) {
+        var ddx = x - mx, ddy = y - my, dist = Math.sqrt(ddx * ddx + ddy * ddy);
+        if (dist < lens) {
+          var q = 1 - dist / lens, f = act * q * q * (d.city ? 1 : 0.6);
+          if (f > 0.02) { lifted.push({ x: x, y: y, r: r, a: a, f: f, nx: dist > 0.5 ? ddx / dist : 0, ny: dist > 0.5 ? ddy / dist : 0 }); continue; }
+        }
+      }
+      var lit = d.near ? Math.min(1, Math.max(0, (t - d.nearDelay) / 400)) : 0;
+      if (lit > 0) {
+        ctx.fillStyle = 'rgba(143,227,218,' + (0.22 * lit) + ')';
+        ctx.beginPath(); ctx.arc(x, y, r + 3 * lit, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = 'rgba(190,245,239,' + Math.max(a, lit) + ')';
+        ctx.beginPath(); ctx.arc(x, y, r + 0.9 * lit, 0, Math.PI * 2); ctx.fill();
+      } else {
+        ctx.fillStyle = d.city ? 'rgba(111,184,177,' + a + ')' : 'rgba(95,169,162,' + a + ')';
+        ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+      }
+    }
+    // Raised dots: drawn last, smallest lift first, each with a shadow on the map below it and a lit top.
+    lifted.sort(function (u, v) { return u.f - v.f; });
+    // Shadows first, so they sit on the map under every raised dot instead of darkening the dots.
+    for (var j = 0; j < lifted.length; j++) {
+      var L = lifted[j]; L.rr = L.r * (1 + 2.1 * L.f);
+      ctx.fillStyle = 'rgba(0,0,0,' + (0.2 * L.f) + ')';
+      ctx.beginPath(); ctx.ellipse(L.x + L.nx * 1.5 * L.f, L.y + L.ny * 1.5 * L.f + 2, L.rr, L.rr * 0.45, 0, 0, Math.PI * 2); ctx.fill();
+    }
+    for (var j2 = 0; j2 < lifted.length; j2++) {
+      var M = lifted[j2], rr = M.rr;
+      var lx = M.x + M.nx * 3.5 * M.f, ly = M.y + M.ny * 3.5 * M.f - 9 * M.f;
+      var aa = Math.min(1, M.a + 0.55 * M.f);
+      var grd = ctx.createRadialGradient(lx - rr * 0.35, ly - rr * 0.4, rr * 0.1, lx, ly, rr);
+      grd.addColorStop(0, 'rgba(228,255,251,' + aa + ')'); grd.addColorStop(1, 'rgba(72,166,157,' + aa + ')');
+      ctx.fillStyle = grd;
+      ctx.beginPath(); ctx.arc(lx, ly, rr, 0, Math.PI * 2); ctx.fill();
+    }
+    if (ringT > 0) {
+      ctx.fillStyle = '#ffffff'; ctx.globalAlpha = ringT;
+      ctx.beginPath(); ctx.arc(hx, hy, 6, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = '#0d2624'; ctx.lineWidth = 2.5; ctx.stroke(); ctx.globalAlpha = 1;
+    }
+    // The name of the city you're pointing at, above its cluster.
+    if (hot && act > 0.05) {
+      var c = cityScreen(hot), zc = tf(c[0], c[1]);
+      ctx.font = '700 16px "Atkinson Hyperlegible Next", system-ui, sans-serif';
+      ctx.textBaseline = 'middle';
+      var w = ctx.measureText(hot.name).width, ly2 = zc[1] - hot.spread * s * zoom * 1.9 - 26;
+      var lx2 = Math.min(cw - w - 24, Math.max(box.bx, zc[0] - w / 2));
+      ctx.globalAlpha = Math.min(1, act * 1.4);
+      ctx.fillStyle = 'rgba(13,38,36,.9)';
+      ctx.beginPath(); ctx.roundRect(lx2 - 10, ly2 - 15, w + 20, 30, 15); ctx.fill();
+      ctx.strokeStyle = 'rgba(143,227,218,.6)'; ctx.lineWidth = 1; ctx.stroke();
+      ctx.fillStyle = '#ffffff'; ctx.fillText(hot.name, lx2, ly2 + 1);
+      ctx.globalAlpha = 1;
+    }
+    ctx.restore();
+    var hbase = [box.x + home[0] * s, box.y + home[1] * s];
+    label.style.left = hbase[0] + 'px'; label.style.top = (hbase[1] + nearR * s * 0.95) + 'px';
+    label.classList.toggle('flip', hbase[0] + 18 + label.offsetWidth > cw - 12);
+    label.classList.toggle('show', (ringT >= 1 || settled) && act < 0.05);
+  }
+  function hotTarget() { return hot ? cityScreen(hot) : [fx, fy]; }
+  function needsFrame() {
+    var c = hotTarget();
+    return (running && visible && !settled) || Math.abs(act - actT) > 0.002 ||
+      (act > 0.002 && (Math.abs(mx - mxT) > 0.3 || Math.abs(my - myT) > 0.3 || Math.abs(fx - c[0]) > 0.3 || Math.abs(fy - c[1]) > 0.3));
+  }
+  function frame(now) {
+    raf = 0;
+    var c = hotTarget(), k = reduce ? 1 : 0.1, km = reduce ? 1 : 0.3, kf = reduce || act < 0.01 ? 1 : 0.15;
+    act += (actT - act) * k;
+    mx += (mxT - mx) * km; my += (myT - my) * km;
+    fx += (c[0] - fx) * kf; fy += (c[1] - fy) * kf;
+    zoom = 1 + (ZOOM_MAX - 1) * act;
+    draw(now);
+    if (needsFrame()) kick();
+  }
+  function kick() { if (!raf) raf = requestAnimationFrame(frame); }
+  function pointAt(px, py) {
+    mxT = px; myT = py;
+    if (!hasPointer) { mx = px; my = py; hasPointer = true; }
+    var n = nearestHot(px, py);
+    if (n && n.k > 0) { hot = n.h; actT = n.k; } else actT = 0;
+    hero.classList.toggle('zoomable', actT > 0);
+    kick();
+  }
+
+  layout();
+  if (zoomDemo) { // A still of the reacting state, for Figma.
+    hot = HOT.filter(function (h) { return h.name === 'Boston'; })[0];
+    var bc = cityScreen(hot);
+    mx = mxT = bc[0] + 6; my = myT = bc[1] + 4; act = actT = 1; fx = bc[0]; fy = bc[1]; zoom = ZOOM_MAX;
+  }
+  draw(performance.now()); kick();
+  window.addEventListener('resize', function () { layout(); act = actT = 0; zoom = 1; draw(performance.now()); });
+  new IntersectionObserver(function (en) { visible = en[0].isIntersecting; if (visible) kick(); }).observe(hero);
+
+  // Mouse: the map reacts as you near a busy city. Touch: tap a city to raise it, tap again to settle it.
+  var canHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  document.getElementById('zoom-hint-text').textContent = canHover ? 'Point at a city to see its study locations' : 'Tap a city on the map';
+  function localPoint(e) { var r = canvas.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; }
+  function overUI(e) { return !!e.target.closest('a, button, .hero-copy > *, .map-bar'); }
+  hero.addEventListener('pointermove', function (e) {
+    if (e.pointerType !== 'mouse' || !canHover) return;
+    if (overUI(e)) { actT = 0; kick(); return; }
+    var p = localPoint(e); pointAt(p[0], p[1]);
+  });
+  // Touch pointers also 'leave' when the finger lifts, so only a mouse leaving settles the map.
+  hero.addEventListener('pointerleave', function (e) { if (e.pointerType !== 'mouse') return; actT = 0; hero.classList.remove('zoomable'); kick(); });
+  hero.addEventListener('click', function (e) {
+    if (canHover || overUI(e)) return;
+    var p = localPoint(e), n = nearestHot(p[0], p[1]);
+    if (n && n.k > 0.6 && !(actT > 0 && hot === n.h)) { hasPointer = false; pointAt(p[0], p[1]); actT = 1; }
+    else actT = 0;
+    kick();
+  });
+
+  var pauseBtn = document.getElementById('pause');
+  if (settled) pauseBtn.hidden = true;
+  pauseBtn.addEventListener('click', function () {
+    running = !running;
+    if (!running) pausedAt = performance.now();
+    document.getElementById('pause-text').innerHTML = (running ? 'Pause' : 'Play') + '<span class="pause-long"> animation</span>';
+    document.querySelector('#pause-icon use').setAttribute('href', running ? '#i-pause' : '#i-play');
+    kick();
+  });
+})();
+</script>
+</body>
+</html>
