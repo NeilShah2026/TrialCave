@@ -71,6 +71,8 @@ export async function seedDemo(): Promise<SeedResult> {
   }
   patientCount += await insertSyntheticPatients(admin);
 
+  await insertResearch(admin, authUserIds);
+
   // NOTE: match precompute (runMatchesForPatient / runMatchesForTrial) lands in
   // Phase 4. Until then, the seed leaves match_results empty; the Phase 4 script
   // (db:match) fills them in.
@@ -496,4 +498,87 @@ async function insertSyntheticPatients(admin: Admin): Promise<number> {
   }
 
   return count;
+}
+
+/** Seed research partners, projects, and a bit of contribution history (B13.5). */
+async function insertResearch(admin: Admin, authIds: Map<string, string>): Promise<void> {
+  const researcherUserId = authIds.get("researcher@example.com") ?? null;
+
+  // Lexington lab, linked to the researcher login.
+  const { data: lab } = await admin
+    .from("research_partners")
+    .insert({ user_id: researcherUserId, org_name: "Lexington University Digital Biomarkers Lab", verified: true })
+    .select("id")
+    .single();
+
+  if (lab) {
+    // Project A — approved.
+    await admin.from("research_projects").insert({
+      partner_id: lab.id,
+      title: "Glucose variability and daily activity across HbA1c ranges",
+      description: "How daily activity and glucose variability differ across HbA1c ranges.",
+      data_types: ["wearables", "labs"],
+      research_type: "academic",
+      allowed_analyses: ["hba1c_by_age", "steps_by_hba1c", "tir_by_hba1c"],
+      status: "approved",
+      access_fee_per_run_cents: 20000,
+    });
+    // Project B — pending (for the admin demo).
+    await admin.from("research_projects").insert({
+      partner_id: lab.id,
+      title: "Retinal findings and diabetes duration",
+      description: "Relationship between diabetes duration and retinopathy.",
+      data_types: ["imaging", "history"],
+      research_type: "academic",
+      allowed_analyses: ["retinopathy_by_duration"],
+      status: "pending",
+      access_fee_per_run_cents: 20000,
+    });
+  }
+
+  // A second seeded partner (no login) backing historical contributions.
+  const { data: consortium } = await admin
+    .from("research_partners")
+    .insert({ user_id: null, org_name: "Bay State Health Research Consortium", verified: true })
+    .select("id")
+    .single();
+
+  if (consortium) {
+    const historical = [
+      { title: "Sleep and glucose control in adults with type 2 diabetes", research_type: "academic" },
+      { title: "Activity patterns after a diabetes diagnosis", research_type: "academic" },
+      { title: "Eye health and long-term blood sugar", research_type: "academic" },
+      { title: "Blood pressure trends in prediabetes", research_type: "academic" },
+      { title: "Wearable heart-rate signals and metabolic health", research_type: "device" },
+      { title: "Real-world response to diabetes medicines", research_type: "pharma" },
+      { title: "Kidney function trajectories in type 2 diabetes", research_type: "pharma" },
+    ];
+    const { data: projects } = await admin
+      .from("research_projects")
+      .insert(
+        historical.map((h) => ({
+          partner_id: consortium.id,
+          title: h.title,
+          description: h.title,
+          data_types: ["wearables", "labs"],
+          research_type: h.research_type,
+          allowed_analyses: ["steps_by_hba1c"],
+          status: "approved",
+          access_fee_per_run_cents: 20000,
+        })),
+      )
+      .select("id");
+
+    // Give the donor personas contribution history against these projects so
+    // their "studies supported" count reflects real rows.
+    const { data: donorPatients } = await admin
+      .from("patients")
+      .select("id, display_name")
+      .in("display_name", ["Maria Gonzalez", "Priya Raman"]);
+    for (const p of donorPatients ?? []) {
+      const n = p.display_name.includes("Maria") ? 3 : (projects?.length ?? 0);
+      const contribs = (projects ?? []).slice(0, n).map((proj) => ({ patient_id: p.id, project_id: proj.id }));
+      if (contribs.length) await admin.from("donor_contributions").insert(contribs);
+    }
+  }
 }

@@ -205,11 +205,15 @@ export function generateSyntheticPatients(
       push("dx:retinopathy", chance(rng, retP), null, recent);
     }
 
-    // Wearable
-    const hasWearable = chance(rng, 0.55);
+    // Wearable. DECISION: the plan (B13.3) suggests 55%, but at 200 patients that
+    // leaves HbA1c bands under the k-anonymity floor, so every Enclave cell
+    // suppresses. Raised to 85% so the demo shows real aggregates while the
+    // suppression logic still hides genuinely small groups.
+    const hasWearable = chance(rng, 0.85);
     const connectedSources: string[] = [];
     if (hasWearable) connectedSources.push(chance(rng, 0.5) ? "apple_health" : "fitbit");
-    const cgmP = group === "t2d" ? 0.3 : group === "prediabetes" ? 0.05 : 0;
+    // Raised from 0.3/0.05 so the CGM time-in-range analysis has enough data.
+    const cgmP = group === "t2d" ? 0.55 : group === "prediabetes" ? 0.15 : 0;
     const hasCgm = chance(rng, cgmP);
     if (hasCgm) connectedSources.push("dexcom");
 

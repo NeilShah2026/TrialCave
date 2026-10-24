@@ -6,7 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { getMyPatient, getSessionUser } from "@/lib/auth";
 import { loadProfile, loadDonorSummary, formatCents } from "@/lib/patient";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { DEMO_MODE } from "@/lib/env";
+import { ConsentGrid } from "./consent-grid";
+import type { ConsentCell } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -33,6 +36,17 @@ export default async function DonorPage() {
   }
 
   const donor = await loadDonorSummary(patient.id);
+
+  const admin = createAdminClient();
+  const { data: consents } = await admin
+    .from("research_consents")
+    .select("data_type, research_type, allowed")
+    .eq("patient_id", patient.id);
+  const consentCells: ConsentCell[] = (consents ?? []).map((c) => ({
+    dataType: c.data_type,
+    researchType: c.research_type,
+    allowed: c.allowed,
+  }));
 
   return (
     <main className="flex-1">
@@ -65,6 +79,10 @@ export default async function DonorPage() {
             </ul>
           </CardContent>
         </Card>
+
+        <div className="mt-4">
+          <ConsentGrid initial={consentCells} />
+        </div>
 
         <p className="mt-4 text-sm text-muted-foreground">
           How your donation is protected:{" "}
