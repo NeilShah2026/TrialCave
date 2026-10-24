@@ -519,7 +519,7 @@ async function insertResearch(admin: Admin, authIds: Map<string, string>): Promi
       description: "How daily activity and glucose variability differ across HbA1c ranges.",
       data_types: ["wearables", "labs"],
       research_type: "academic",
-      allowed_analyses: ["hba1c_by_age", "steps_by_hba1c", "tir_by_hba1c"],
+      allowed_analyses: ["hba1c_by_age", "steps_by_hba1c", "tir_by_hba1c", "hba1c_by_vulnerability"],
       status: "approved",
       access_fee_per_run_cents: 20000,
     });

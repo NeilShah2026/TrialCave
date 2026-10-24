@@ -3,6 +3,8 @@ import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { logAudit } from "@/lib/audit";
 import { DONOR_SHARE } from "@/lib/env";
+import { PAYABLE_SOURCES } from "@/lib/verification";
+import { townEquity } from "@/lib/geo/equity";
 import { runAnalysis, ANALYSIS_META, type AnalysisKey, type AnalysisResult, type DonorRow } from "@/lib/enclave/analyses";
 
 type Admin = ReturnType<typeof createAdminClient>;
@@ -66,22 +68,26 @@ async function loadDonorRows(admin: Admin, patientIds: string[]): Promise<DonorR
 
     const { data: patients } = await admin
       .from("patients")
-      .select("id, date_of_birth")
+      .select("id, date_of_birth, town")
       .in("id", chunk);
-    const ageById = new Map(
-      (patients ?? []).map((p) => {
-        const dob = new Date(p.date_of_birth);
-        const age = today.getFullYear() - dob.getFullYear();
-        return [p.id, age];
-      }),
-    );
+    const ageById = new Map<string, number>();
+    const vulnById = new Map<string, string>();
+    for (const p of patients ?? []) {
+      const dob = new Date(p.date_of_birth);
+      ageById.set(p.id, today.getFullYear() - dob.getFullYear());
+      // Town-level community vulnerability only — never finer than town.
+      vulnById.set(p.id, townEquity(p.town).svi);
+    }
 
+    // ANTI-FRAUD: the paid pool draws ONLY on provenance-backed facts. Exclude
+    // self-reported (typed/yes-no) facts so fabricated data can never earn money.
     const facts: { patient_id: string; field: string; value_num: number | null; value_bool: boolean | null }[] = [];
     for (let page = 0; ; page++) {
       const { data: f } = await admin
         .from("patient_current_facts")
-        .select("patient_id, field, value_num, value_bool")
+        .select("patient_id, field, value_num, value_bool, source")
         .in("patient_id", chunk)
+        .in("source", PAYABLE_SOURCES)
         .range(page * 1000, page * 1000 + 999);
       if (!f || f.length === 0) break;
       facts.push(...f);
@@ -127,6 +133,7 @@ async function loadDonorRows(admin: Admin, patientIds: string[]): Promise<DonorR
       const t2d = f.get("dx:type2_diabetes");
       rows.push({
         age: ageById.get(pid) ?? null,
+        vulnerability: vulnById.get(pid) ?? null,
         hba1c: f.get("hba1c_pct")?.num ?? null,
         avgDailySteps: mean(w.steps),
         cgmTimeInRange: mean(w.tir),

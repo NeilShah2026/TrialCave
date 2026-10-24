@@ -132,13 +132,23 @@ async function loadAllTrialsWithCriteria(admin: Admin): Promise<{
 
   const criteriaByTrial = new Map<string, EvalCriterion[]>();
   const trialIds = trials.map((t) => t.id);
-  for (let i = 0; i < trialIds.length; i += 200) {
-    const chunk = trialIds.slice(i, i + 200);
-    const { data } = await admin.from("trial_criteria").select("*").in("trial_id", chunk);
-    for (const row of data ?? []) {
-      const tid = row.trial_id as string;
-      if (!criteriaByTrial.has(tid)) criteriaByTrial.set(tid, []);
-      criteriaByTrial.get(tid)!.push(toEvalCriterion(row));
+  // Chunk trial ids AND paginate within each chunk: Supabase caps a select at
+  // 1000 rows, and a chunk of trials can have far more criteria than that.
+  for (let i = 0; i < trialIds.length; i += 100) {
+    const chunk = trialIds.slice(i, i + 100);
+    for (let page = 0; ; page++) {
+      const { data } = await admin
+        .from("trial_criteria")
+        .select("*")
+        .in("trial_id", chunk)
+        .range(page * 1000, page * 1000 + 999);
+      if (!data || data.length === 0) break;
+      for (const row of data) {
+        const tid = row.trial_id as string;
+        if (!criteriaByTrial.has(tid)) criteriaByTrial.set(tid, []);
+        criteriaByTrial.get(tid)!.push(toEvalCriterion(row));
+      }
+      if (data.length < 1000) break;
     }
   }
   return { trials, criteriaByTrial };

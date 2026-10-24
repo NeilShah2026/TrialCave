@@ -10,6 +10,7 @@ function donor(p: Partial<DonorRow>): DonorRow {
     cgmTimeInRange: p.cgmTimeInRange ?? null,
     diabetesDurationYears: p.diabetesDurationYears ?? null,
     hasRetinopathy: p.hasRetinopathy ?? null,
+    vulnerability: p.vulnerability ?? null,
   };
 }
 
@@ -41,6 +42,16 @@ describe("runAnalysis — suppression", () => {
     const band = res.rows.find((r) => r.band === "10–14")!;
     expect(band.n).toBe(10);
     expect(band.value).toBe(40);
+  });
+
+  it("hba1c_by_vulnerability groups by community band", () => {
+    const donors: DonorRow[] = [
+      ...Array.from({ length: 10 }, () => donor({ hba1c: 8.0, vulnerability: "very_high" })),
+      ...Array.from({ length: 10 }, () => donor({ hba1c: 6.5, vulnerability: "low" })),
+    ];
+    const res = runAnalysis("hba1c_by_vulnerability", donors);
+    expect(res.rows.find((r) => r.band === "Very high")!.value).toBe(8.0);
+    expect(res.rows.find((r) => r.band === "Lower")!.value).toBe(6.5);
   });
 
   it("empty bands are not counted as suppressed", () => {

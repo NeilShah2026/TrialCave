@@ -10,7 +10,8 @@ export type AnalysisKey =
   | "hba1c_by_age"
   | "steps_by_hba1c"
   | "tir_by_hba1c"
-  | "retinopathy_by_duration";
+  | "retinopathy_by_duration"
+  | "hba1c_by_vulnerability";
 
 /** One donor's analysis-relevant facts (already de-identified, no PII). */
 export interface DonorRow {
@@ -20,6 +21,8 @@ export interface DonorRow {
   cgmTimeInRange: number | null;
   diabetesDurationYears: number | null;
   hasRetinopathy: boolean | null;
+  /** Town-level community vulnerability band (never finer than town). */
+  vulnerability: string | null;
 }
 
 export interface AnalysisResultRow {
@@ -43,7 +46,11 @@ export const ANALYSIS_META: Record<AnalysisKey, { label: string; valueLabel: str
   steps_by_hba1c: { label: "Daily steps by HbA1c range", valueLabel: "Mean daily steps", needs: ["wearables", "labs"] },
   tir_by_hba1c: { label: "Time in range by HbA1c (CGM users)", valueLabel: "Mean time in range (%)", needs: ["wearables", "labs"] },
   retinopathy_by_duration: { label: "Retinopathy by diabetes duration", valueLabel: "% with retinopathy", needs: ["imaging", "history"] },
+  hba1c_by_vulnerability: { label: "HbA1c by community vulnerability (equity)", valueLabel: "Mean HbA1c (%)", needs: ["labs"] },
 };
+
+const VULN_BANDS = ["Lower", "Moderate", "High", "Very high"];
+const VULN_LABEL: Record<string, string> = { low: "Lower", moderate: "Moderate", high: "High", very_high: "Very high" };
 
 function ageBand(age: number): string {
   if (age < 40) return "30–39";
@@ -106,6 +113,14 @@ export function runAnalysis(key: AnalysisKey, donors: DonorRow[]): AnalysisResul
       (grouped.get(b) ?? grouped.set(b, []).get(b)!).push(d.hba1c);
     }
     ({ rows, suppressed } = buildRows(AGE_BANDS, grouped));
+  } else if (key === "hba1c_by_vulnerability") {
+    const grouped = new Map<string, number[]>();
+    for (const d of donors) {
+      if (d.hba1c == null || !d.vulnerability) continue;
+      const b = VULN_LABEL[d.vulnerability] ?? d.vulnerability;
+      (grouped.get(b) ?? grouped.set(b, []).get(b)!).push(d.hba1c);
+    }
+    ({ rows, suppressed } = buildRows(VULN_BANDS, grouped));
   } else if (key === "steps_by_hba1c") {
     const grouped = new Map<string, number[]>();
     for (const d of donors) {

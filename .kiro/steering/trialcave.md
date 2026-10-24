@@ -6,6 +6,22 @@ These rules apply to every task in the TrialCave build. The source of truth is
 
 ## Team decisions that override the plan (most recent first)
 
+- **Data-integrity trust tiers (anti-fraud).** Money only attaches to data with
+  provenance. Every `patient_facts` row has a verification tier derived from its
+  `source`:
+  - `verified` — wearable/CGM device feed, patient portal, imaging, or
+    clinic-attested. The user cannot edit the value (provenance by design).
+  - `document_backed` — uploaded/photographed record with a required source quote,
+    patient-confirmed. Evidence on file.
+  - `self_reported` — typed by hand or a yes/no answer. No external evidence.
+  Rule: the Enclave paid pool and donor payouts draw ONLY on `verified` and
+  `document_backed` facts. `self_reported` facts are matching-only and NEVER earn
+  money. Demo connectors are simulated device feeds the user can't edit (models the
+  B2B/provenance guarantee). Live OAuth/FHIR/NPI/KYC are roadmap. Keep plausibility
+  checks, source-quote requirement, SHA-256 dedup, k-anonymity, capped payouts, and
+  audit as backstops.
+- **Equity layer is town-level only (see earlier decision below).**
+
 - **Inbound email is DEPRECATED.** Do not build the Postmark webhook
   (`/api/inbound/postmark`), the "Add records by email" settings panel, the
   `simulateForwardedEmail` action, or the inbound-email env vars

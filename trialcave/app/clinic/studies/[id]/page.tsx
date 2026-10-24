@@ -9,6 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getMyClinic, getSessionUser, assertClinicOwnsTrial } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getOutreachCount } from "@/lib/outreach/eligible";
+import { getEquitySummary } from "@/lib/outreach/equity";
+import { EquitySummaryView } from "@/components/equity-summary";
 import { FindParticipants } from "./find-participants";
 
 export const dynamic = "force-dynamic";
@@ -34,6 +36,7 @@ export default async function StudyPage({ params }: { params: Promise<{ id: stri
     .order("sort_order");
 
   const count = await getOutreachCount(id);
+  const equity = await getEquitySummary(id);
 
   // Invitation status counts.
   const statuses = ["pending", "approved", "declined", "expired", "withdrawn"] as const;
@@ -66,6 +69,7 @@ export default async function StudyPage({ params }: { params: Promise<{ id: stri
         <Tabs defaultValue="find" className="mt-6">
           <TabsList>
             <TabsTrigger value="find">Find participants</TabsTrigger>
+            <TabsTrigger value="equity">Equitable reach</TabsTrigger>
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="invitations">Invitations</TabsTrigger>
             <TabsTrigger value="contacts">Approved contacts</TabsTrigger>
@@ -80,6 +84,10 @@ export default async function StudyPage({ params }: { params: Promise<{ id: stri
               irbNumber={trial.irb_protocol_number}
               count={count}
             />
+          </TabsContent>
+
+          <TabsContent value="equity">
+            <EquitySummaryView summary={equity} />
           </TabsContent>
 
           <TabsContent value="overview">
