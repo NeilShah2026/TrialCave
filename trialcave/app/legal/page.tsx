@@ -1,7 +1,8 @@
 import Link from "next/link";
+import { ChevronRight, FileText } from "lucide-react";
 
-import { PublicHeader } from "@/components/public-header";
-import { Card, CardContent } from "@/components/ui/card";
+import { PageBody, PageHero } from "@/components/page-hero";
+import { SiteHeader } from "@/components/site-header";
 import { LEGAL_DOCS } from "@/components/legal-layout";
 
 export const metadata = { title: "Legal" };
@@ -17,23 +18,34 @@ const BLURBS: Record<string, string> = {
 export default function LegalIndexPage() {
   return (
     <main className="flex-1">
-      <PublicHeader />
-      <div className="mx-auto max-w-[800px] px-4 py-10">
-        <h1 className="text-3xl font-semibold">Legal</h1>
-        <p className="mt-2 text-muted-foreground">Plain-language demo versions. Not reviewed by a lawyer.</p>
-        <div className="mt-6 grid gap-3 sm:grid-cols-2">
+      <SiteHeader />
+      <PageHero
+        tone="mist"
+        width="narrow"
+        title="Legal"
+        lede="Plain-language demo versions. Not reviewed by a lawyer."
+      />
+      <PageBody width="narrow">
+        <ul className="grid gap-4 sm:grid-cols-2">
           {LEGAL_DOCS.map((d) => (
-            <Link key={d.href} href={d.href} className="block rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
-              <Card className="h-full transition-colors hover:border-primary">
-                <CardContent className="pt-6">
-                  <h2 className="font-semibold">{d.label}</h2>
-                  <p className="mt-1 text-sm text-muted-foreground">{BLURBS[d.href]}</p>
-                </CardContent>
-              </Card>
-            </Link>
+            <li key={d.href}>
+              <Link
+                href={d.href}
+                className="group flex h-full items-start gap-4 rounded-[24px] border-2 border-transparent bg-white p-6 shadow-card transition-colors hover:border-tc-primary focus-visible:border-tc-primary"
+              >
+                <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-tc-primary-soft text-tc-primary-ink">
+                  <FileText className="size-5" aria-hidden />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[1.15rem] font-bold text-tc-ink">{d.label}</span>
+                  <span className="mt-1 block text-[1rem] text-tc-ink-2">{BLURBS[d.href]}</span>
+                </span>
+                <ChevronRight className="mt-2.5 size-5 shrink-0 text-tc-primary-ink transition-transform group-hover:translate-x-0.5" aria-hidden />
+              </Link>
+            </li>
           ))}
-        </div>
-      </div>
+        </ul>
+      </PageBody>
     </main>
   );
 }

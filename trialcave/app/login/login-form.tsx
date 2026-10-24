@@ -13,13 +13,13 @@ export function LoginForm({ next }: { next?: string }) {
   const [state, formAction, pending] = useActionState(signIn, initialState);
 
   return (
-    <form action={formAction} className="space-y-4">
+    <form action={formAction} className="space-y-5">
       {next ? <input type="hidden" name="next" value={next} /> : null}
-      <div className="space-y-1.5">
+      <div className="space-y-2">
         <Label htmlFor="email">Email</Label>
         <Input id="email" name="email" type="email" autoComplete="email" required />
       </div>
-      <div className="space-y-1.5">
+      <div className="space-y-2">
         <Label htmlFor="password">Password</Label>
         <Input
           id="password"
@@ -30,11 +30,11 @@ export function LoginForm({ next }: { next?: string }) {
         />
       </div>
       {state.error ? (
-        <p role="alert" className="text-sm text-tc-danger">
+        <p role="alert" className="rounded-2xl bg-tc-danger-soft px-5 py-4 font-semibold text-tc-danger-ink">
           {state.error}
         </p>
       ) : null}
-      <Button type="submit" className="w-full" disabled={pending}>
+      <Button type="submit" size="lg" className="w-full" disabled={pending}>
         {pending ? "Signing in…" : "Log in"}
       </Button>
     </form>

@@ -43,6 +43,7 @@ function statusWord(kind: "inclusion" | "exclusion", status: CriterionStatus): s
   return status === "pass" ? "Meets" : "Doesn't meet";
 }
 
+/** Page title and intro live in the PageHero on the server page. */
 export function SummaryClient({
   trialTitle,
   trialRef,
@@ -80,13 +81,13 @@ export function SummaryClient({
 
   const renderList = (items: SummaryItem[]) =>
     items.length === 0 ? (
-      <p className="text-sm text-muted-foreground">None on file.</p>
+      <p className="text-[1rem] text-tc-ink-2">None on file.</p>
     ) : (
-      <ul className="text-sm">
+      <ul className="text-[1rem]">
         {items.map((i) => (
-          <li key={i.label} className="flex justify-between gap-3 border-b border-border py-1 last:border-0">
-            <span>{i.label}</span>
-            <span className="text-muted-foreground">
+          <li key={i.label} className="flex justify-between gap-3 border-b border-tc-border py-2 last:border-0">
+            <span className="font-semibold text-tc-ink">{i.label}</span>
+            <span className="text-tc-ink-2">
               {i.value}
               {i.date ? ` · ${format(parseISO(i.date), "MMM yyyy")}` : ""}
             </span>
@@ -97,17 +98,15 @@ export function SummaryClient({
 
   return (
     <div>
-      <Card className="mt-4 print:hidden">
-        <CardContent className="pt-6">
-          <h1 className="text-2xl font-semibold">Pre-screen summary</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Choose what to include, then print it or save it as a PDF. Bring it to your doctor or
-            send it to the study team. Nothing is shared from here.
-          </p>
-          <fieldset className="mt-4 grid gap-2 sm:grid-cols-3">
-            <legend className="mb-2 text-sm font-medium">Include</legend>
+      <Card className="print:hidden">
+        <CardContent className="pt-6 sm:pt-7">
+          <fieldset className="grid gap-3 sm:grid-cols-3">
+            <legend className="mb-3 text-[1.15rem] font-bold">Include</legend>
             {OPTIONS.map((o) => (
-              <label key={o.key} className="flex items-center gap-2 text-sm">
+              <label
+                key={o.key}
+                className="flex min-h-[3.1rem] cursor-pointer items-center gap-3 rounded-2xl border-2 border-tc-border px-4 py-2 text-[1rem] font-semibold text-tc-ink has-[[data-state=checked]]:border-tc-primary"
+              >
                 <Checkbox
                   checked={include[o.key]}
                   onCheckedChange={(v) => setInclude((s) => ({ ...s, [o.key]: Boolean(v) }))}
@@ -116,64 +115,64 @@ export function SummaryClient({
               </label>
             ))}
           </fieldset>
-          <Button className="mt-4" onClick={() => window.print()}>
+          <Button size="lg" className="mt-5" onClick={() => window.print()}>
             <Printer aria-hidden /> Print / Save as PDF
           </Button>
         </CardContent>
       </Card>
 
-      <article className="mt-6 rounded-2xl border border-border bg-card p-6 print:mt-0 print:border-0 print:p-0">
-        <header className="border-b border-border pb-3">
-          <p className="text-xs uppercase tracking-wide text-muted-foreground">TrialCave pre-screen summary</p>
-          <h2 className="mt-1 text-xl font-semibold">{trialTitle}</h2>
-          <p className="text-sm text-muted-foreground">{trialRef} · {statusLabel}</p>
+      <article className="mt-6 rounded-[24px] bg-white p-7 text-tc-ink shadow-card print:mt-0 print:rounded-none print:p-0 print:shadow-none">
+        <header className="border-b-2 border-tc-border pb-4">
+          <p className="text-[0.95rem] font-bold text-tc-primary-ink">TrialCave pre-screen summary</p>
+          <h2 className="mt-1 text-[1.45rem] font-extrabold tracking-tight">{trialTitle}</h2>
+          <p className="mt-1 text-[1rem] text-tc-ink-2">{trialRef} · {statusLabel}</p>
         </header>
 
-        <section className="mt-4">
-          <h3 className="text-sm font-semibold">About me</h3>
-          <dl className="mt-1 grid grid-cols-2 gap-x-4 gap-y-1 text-sm sm:grid-cols-4">
-            {name ? (<><dt className="text-muted-foreground">Name</dt><dd>{name}</dd></>) : null}
-            {include.age && personal.age ? (<><dt className="text-muted-foreground">Age</dt><dd>{personal.age}</dd></>) : null}
-            {include.sex && personal.sex ? (<><dt className="text-muted-foreground">Sex</dt><dd>{personal.sex}</dd></>) : null}
-            {include.town && personal.town ? (<><dt className="text-muted-foreground">Town</dt><dd>{personal.town}</dd></>) : null}
+        <section className="mt-5">
+          <h3 className="text-[1.15rem] font-bold">About me</h3>
+          <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-[1rem] sm:grid-cols-4">
+            {name ? (<><dt className="text-tc-muted">Name</dt><dd className="font-semibold">{name}</dd></>) : null}
+            {include.age && personal.age ? (<><dt className="text-tc-muted">Age</dt><dd className="font-semibold">{personal.age}</dd></>) : null}
+            {include.sex && personal.sex ? (<><dt className="text-tc-muted">Sex</dt><dd className="font-semibold">{personal.sex}</dd></>) : null}
+            {include.town && personal.town ? (<><dt className="text-tc-muted">Town</dt><dd className="font-semibold">{personal.town}</dd></>) : null}
           </dl>
           {!name && !include.age && !include.sex && !include.town ? (
-            <p className="text-sm text-muted-foreground">No personal details included.</p>
+            <p className="text-[1rem] text-tc-ink-2">No personal details included.</p>
           ) : null}
         </section>
 
         {include.conditions ? (
-          <section className="mt-4">
-            <h3 className="text-sm font-semibold">Diagnoses</h3>
+          <section className="mt-5">
+            <h3 className="text-[1.15rem] font-bold">Diagnoses</h3>
             {renderList(conditions)}
           </section>
         ) : null}
         {include.labs ? (
-          <section className="mt-4">
-            <h3 className="text-sm font-semibold">Lab results and vitals</h3>
+          <section className="mt-5">
+            <h3 className="text-[1.15rem] font-bold">Lab results and vitals</h3>
             {renderList(labs)}
           </section>
         ) : null}
         {include.medications ? (
-          <section className="mt-4">
-            <h3 className="text-sm font-semibold">Medications</h3>
+          <section className="mt-5">
+            <h3 className="text-[1.15rem] font-bold">Medications</h3>
             {renderList(medications)}
           </section>
         ) : null}
 
         {include.criteria ? (
-          <section className="mt-4">
-            <h3 className="text-sm font-semibold">Eligibility checklist</h3>
+          <section className="mt-5">
+            <h3 className="text-[1.15rem] font-bold">Eligibility checklist</h3>
             {criteria.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No criteria checked yet.</p>
+              <p className="text-[1rem] text-tc-ink-2">No criteria checked yet.</p>
             ) : (
-              <ul className="mt-1 space-y-1 text-sm">
+              <ul className="mt-2 text-[1rem]">
                 {criteria.map((c) => (
-                  <li key={c.id} className="flex gap-2">
-                    <CriterionIcon status={c.sensitive ? "unknown" : c.status} kind={c.kind} className="[&_svg]:size-4" />
+                  <li key={c.id} className="flex gap-2 border-t border-tc-border py-2 first:border-t-0">
+                    <CriterionIcon status={c.sensitive ? "unknown" : c.status} kind={c.kind} className="[&_svg]:size-5" />
                     <span>
                       {c.kind === "exclusion" ? "Exclusion: " : ""}
-                      {c.text} — <span className="text-muted-foreground">{c.sensitive ? "Not included" : statusWord(c.kind, c.status)}</span>
+                      {c.text} — <span className="text-tc-ink-2">{c.sensitive ? "Not included" : statusWord(c.kind, c.status)}</span>
                     </span>
                   </li>
                 ))}
@@ -182,7 +181,7 @@ export function SummaryClient({
           </section>
         ) : null}
 
-        <footer className="mt-6 border-t border-border pt-3 text-xs text-muted-foreground">
+        <footer className="mt-6 border-t-2 border-tc-border pt-4 text-[0.95rem] text-tc-muted">
           Prepared by the patient using TrialCave on {today}. Not a medical record. The study team
           makes the final decision.
         </footer>

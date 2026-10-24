@@ -17,20 +17,21 @@ export function CriteriaList({ criteria }: { criteria: Criterion[] }) {
 
   return (
     <div>
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Who can join</h2>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-[1.45rem] font-extrabold tracking-tight">Who can join</h2>
         <button
           type="button"
           onClick={() => setShowOriginal((v) => !v)}
-          className="text-sm text-primary hover:underline"
+          aria-pressed={showOriginal}
+          className="min-h-11 rounded-lg text-[1rem] font-bold text-tc-primary-ink hover:underline focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-tc-primary-soft"
         >
           {showOriginal ? "Show plain language" : "Show original trial text"}
         </button>
       </div>
 
-      <ul className="mt-3 space-y-2">
+      <ul className="mt-3">
         {inclusion.map((c) => (
-          <li key={c.id} className="flex gap-2 text-sm">
+          <li key={c.id} className="flex gap-3 border-t border-tc-border py-3 text-[1.05rem] text-tc-ink first:border-t-0">
             <Badge variant="success" className="mt-0.5 shrink-0">
               Needed
             </Badge>
@@ -38,16 +39,16 @@ export function CriteriaList({ criteria }: { criteria: Criterion[] }) {
           </li>
         ))}
         {inclusion.length === 0 ? (
-          <li className="text-sm text-muted-foreground">No inclusion criteria listed.</li>
+          <li className="py-3 text-[1rem] text-tc-ink-2">No inclusion criteria listed.</li>
         ) : null}
       </ul>
 
       {exclusion.length > 0 ? (
         <>
-          <h2 className="mt-6 text-lg font-semibold">Who can&apos;t join</h2>
-          <ul className="mt-3 space-y-2">
+          <h2 className="mt-8 text-[1.45rem] font-extrabold tracking-tight">Who can&apos;t join</h2>
+          <ul className="mt-3">
             {exclusion.map((c) => (
-              <li key={c.id} className="flex gap-2 text-sm">
+              <li key={c.id} className="flex gap-3 border-t border-tc-border py-3 text-[1.05rem] text-tc-ink first:border-t-0">
                 <Badge variant="danger" className="mt-0.5 shrink-0">
                   Rules out
                 </Badge>

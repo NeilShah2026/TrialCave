@@ -1,9 +1,8 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
 
 import { ClinicNav } from "@/components/clinic-nav";
 import { ContactReportView } from "@/components/contact-report";
+import { PageBody, PageHero } from "@/components/page-hero";
 import { getMyClinic, getSessionUser, assertClinicOwnsInvitation } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { logAudit } from "@/lib/audit";
@@ -37,15 +36,15 @@ export default async function ContactPage({ params }: { params: Promise<{ invita
   return (
     <main className="flex-1">
       <ClinicNav email={user?.email ?? ""} clinicName={clinic.name} />
-      <div className="mx-auto max-w-[800px] px-4 py-8">
-        <Link href={`/clinic/studies/${inv.trial_id}?tab=contacts`} className="inline-flex items-center gap-1 text-sm text-primary hover:underline">
-          <ArrowLeft className="size-4" aria-hidden /> Study
-        </Link>
-        <h1 className="mt-3 text-2xl font-semibold">Approved contact</h1>
-        <div className="mt-4">
-          <ContactReportView report={report} />
-        </div>
-      </div>
+      <PageHero
+        tone="mist"
+        width="narrow"
+        back={{ href: `/clinic/studies/${inv.trial_id}?tab=contacts`, label: "Study" }}
+        title="Approved contact"
+      />
+      <PageBody width="narrow" className="pt-0">
+        <ContactReportView report={report} />
+      </PageBody>
     </main>
   );
 }

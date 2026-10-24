@@ -22,7 +22,10 @@ interface SettingsValues {
 }
 
 const selectClass =
-  "h-10 w-full rounded-md border border-border bg-card px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary";
+  "min-h-[3.1rem] w-full rounded-[14px] border-2 border-input bg-white px-3 text-[1.05rem] text-tc-ink focus-visible:border-tc-primary focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-tc-primary-soft";
+const sectionTitle = "text-[1.45rem] font-extrabold tracking-tight";
+const choiceRow =
+  "flex cursor-pointer items-center gap-3 rounded-2xl border-2 border-tc-border px-4 py-3 text-[1.05rem] text-tc-ink has-[[data-state=checked]]:border-tc-primary has-[[data-state=checked]]:bg-tc-primary-soft";
 
 export function SettingsForm({ towns, initial }: { towns: string[]; initial: SettingsValues }) {
   const router = useRouter();
@@ -71,9 +74,9 @@ export function SettingsForm({ towns, initial }: { towns: string[]; initial: Set
 
   return (
     <Card>
-      <CardContent className="space-y-6 pt-6">
-        <section className="space-y-1.5">
-          <h2 className="text-lg font-semibold">Language</h2>
+      <CardContent className="space-y-8 pt-6 sm:pt-7">
+        <section className="space-y-2">
+          <h2 className={sectionTitle}>Language</h2>
           <Label htmlFor="settings-lang">Show trial summaries and questions in</Label>
           <select
             id="settings-lang"
@@ -85,28 +88,27 @@ export function SettingsForm({ towns, initial }: { towns: string[]; initial: Set
               <option key={l.code} value={l.code}>{l.nativeLabel}</option>
             ))}
           </select>
-          <p className="text-xs text-muted-foreground">Translations are machine-made. You can always see the original English.</p>
+          <p className="text-[0.95rem] text-tc-muted">Translations are machine-made. You can always see the original English.</p>
         </section>
 
-        <section className="space-y-3">
-          <h2 className="text-lg font-semibold">Location and travel</h2>
-          <div className="max-w-xs space-y-1.5">
+        <section className="space-y-4 border-t border-tc-border pt-8">
+          <h2 className={sectionTitle}>Location and travel</h2>
+          <div className="max-w-xs space-y-2">
             <Label htmlFor="settings-town">Town</Label>
             <select id="settings-town" value={form.town} onChange={(e) => set("town", e.target.value)} className={selectClass}>
               {towns.map((t) => (
                 <option key={t} value={t}>{t}</option>
               ))}
             </select>
-            <p className="text-xs text-muted-foreground">We only store your town, never your address.</p>
+            <p className="text-[0.95rem] text-tc-muted">We only store your town, never your address.</p>
           </div>
           <fieldset>
-            <legend className="text-sm font-medium">How far would you travel?</legend>
-            <div className="mt-1.5 flex flex-wrap gap-2">
+            <legend className="text-[1rem] font-bold text-tc-ink">How far would you travel?</legend>
+            <div className="mt-2 flex flex-wrap gap-2">
               {TRAVEL_RADII.map((r) => (
                 <Button
                   key={r}
                   type="button"
-                  size="sm"
                   variant={form.travelRadiusMiles === r ? "default" : "outline"}
                   aria-pressed={form.travelRadiusMiles === r}
                   onClick={() => set("travelRadiusMiles", r)}
@@ -118,34 +120,38 @@ export function SettingsForm({ towns, initial }: { towns: string[]; initial: Set
           </fieldset>
         </section>
 
-        <section className="space-y-3">
-          <h2 className="text-lg font-semibold">Clinic invitations</h2>
-          <p className="text-sm text-muted-foreground">
+        <section className="space-y-4 border-t border-tc-border pt-8">
+          <h2 className={sectionTitle}>Clinic invitations</h2>
+          <p className="text-[1.05rem] text-tc-ink-2">
             Clinics never see who you are. They can only reach you if you meet their study&apos;s
             criteria, and nothing is shared unless you approve.
           </p>
-          <label className="flex items-center gap-3 text-sm">
+          <label className={choiceRow}>
             <Checkbox checked={form.allowInvitations} onCheckedChange={(v) => set("allowInvitations", Boolean(v))} />
-            Allow verified clinics to invite me
+            <span className="font-semibold">Allow verified clinics to invite me</span>
           </label>
           {form.allowInvitations ? (
-            <fieldset className="space-y-2 pl-7">
-              <legend className="text-sm font-medium">For which conditions?</legend>
+            <div className="rounded-2xl bg-tc-mist p-5">
+            <fieldset className="space-y-2">
+              <legend className="mb-2 text-[1.05rem] font-bold text-tc-ink">For which conditions?</legend>
               {CONDITION_CATEGORIES.map((c) => (
-                <label key={c.value} className="flex items-center gap-3 text-sm">
+                <label key={c.value} className={cn(choiceRow, "bg-white")}>
                   <Checkbox checked={form.conditionCategories.includes(c.value)} onCheckedChange={() => toggleCategory(c.value)} />
                   {c.label}
                 </label>
               ))}
               {form.conditionCategories.length === 0 ? (
-                <p className="text-xs text-tc-warning">Pick at least one, or clinics won&apos;t be able to invite you.</p>
+                <p className="rounded-xl bg-tc-warning-soft px-4 py-3 text-[1rem] font-semibold text-tc-warning-ink">
+                  Pick at least one, or clinics won&apos;t be able to invite you.
+                </p>
               ) : null}
             </fieldset>
+            </div>
           ) : null}
         </section>
 
-        <div className="flex flex-wrap gap-2">
-          <Button onClick={save} disabled={pending || !dirty}>
+        <div className="flex flex-wrap gap-3 border-t border-tc-border pt-6">
+          <Button size="lg" onClick={save} disabled={pending || !dirty}>
             {pending ? "Saving…" : "Save settings"}
           </Button>
           {normalized(form) !== normalized(baseline) ? (
@@ -181,17 +187,17 @@ export function MutedClinics({ clinics }: { clinics: { id: string; name: string 
 
   return (
     <Card>
-      <CardContent className="pt-6">
-        <h2 className="text-lg font-semibold">Muted clinics</h2>
+      <CardContent className="pt-6 sm:pt-7">
+        <h2 className="text-[1.45rem] font-extrabold tracking-tight">Muted clinics</h2>
         {clinics.length === 0 ? (
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="mt-2 text-[1.05rem] text-tc-ink-2">
             You haven&apos;t muted any clinics. You can mute one from any invitation.
           </p>
         ) : (
-          <ul className="mt-2 divide-y divide-border">
+          <ul className="mt-3">
             {clinics.map((c) => (
-              <li key={c.id} className="flex items-center justify-between py-2 text-sm">
-                <span>{c.name}</span>
+              <li key={c.id} className="flex items-center justify-between gap-3 border-t border-tc-border py-3 text-[1.05rem] first:border-t-0">
+                <span className="font-semibold text-tc-ink">{c.name}</span>
                 <Button size="sm" variant="outline" disabled={pending} onClick={() => unmute(c.id, c.name)}>
                   Unmute
                 </Button>

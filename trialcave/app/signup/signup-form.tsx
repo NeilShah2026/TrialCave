@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import Link from "next/link";
+import { Building2, CheckCircle2, FlaskConical, HeartPulse } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,21 +12,24 @@ import { signUp, type SignUpState } from "./actions";
 
 type RoleChoice = "patient" | "clinic" | "researcher";
 
-const roleOptions: { value: RoleChoice; title: string; body: string }[] = [
+const roleOptions: { value: RoleChoice; title: string; body: string; icon: typeof HeartPulse }[] = [
   {
     value: "patient",
     title: "I'm looking for trials",
     body: "Build a health profile and get matched. Optionally become a Data Donor.",
+    icon: HeartPulse,
   },
   {
     value: "clinic",
     title: "I'm a research clinic",
     body: "Reach pre-qualified participants without seeing who they are.",
+    icon: Building2,
   },
   {
     value: "researcher",
     title: "I'm a research partner",
     body: "Run approved aggregate analyses inside the Enclave.",
+    icon: FlaskConical,
   },
 ];
 
@@ -53,67 +57,87 @@ export function SignupForm({ initialPath, towns }: { initialPath?: string; towns
   const [state, formAction, pending] = useActionState(signUp, initialState);
 
   return (
-    <form action={formAction} className="space-y-5">
+    <form action={formAction} className="space-y-6">
       <input type="hidden" name="role" value={role} />
       {initialPath === "donor" ? <input type="hidden" name="path" value="donor" /> : null}
 
-      <fieldset className="space-y-2">
-        <legend className="text-sm font-medium">I am…</legend>
-        {roleOptions.map((o) => (
-          <button
-            key={o.value}
-            type="button"
-            onClick={() => setRole(o.value)}
-            aria-pressed={role === o.value}
-            className={cn(
-              "flex w-full flex-col items-start rounded-md border px-3 py-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
-              role === o.value ? "border-primary bg-tc-primary-soft" : "border-border bg-card hover:bg-muted",
-            )}
-          >
-            <span className="text-sm font-medium">{o.title}</span>
-            <span className="text-xs text-muted-foreground">{o.body}</span>
-          </button>
-        ))}
+      <fieldset className="space-y-3">
+        <legend className="mb-3 text-[1.15rem] font-bold text-tc-ink">I am…</legend>
+        {roleOptions.map((o) => {
+          const selected = role === o.value;
+          const Icon = o.icon;
+          return (
+            <button
+              key={o.value}
+              type="button"
+              onClick={() => setRole(o.value)}
+              aria-pressed={selected}
+              className={cn(
+                "flex min-h-12 w-full items-start gap-4 rounded-2xl border-2 p-4 text-left transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-tc-primary-soft",
+                selected
+                  ? "border-tc-primary bg-tc-primary-soft"
+                  : "border-tc-border bg-white hover:border-tc-primary",
+              )}
+            >
+              <span
+                className={cn(
+                  "flex size-11 shrink-0 items-center justify-center rounded-xl",
+                  selected ? "bg-tc-primary text-white" : "bg-tc-mist text-tc-primary-ink",
+                )}
+              >
+                <Icon className="size-6" aria-hidden />
+              </span>
+              <span className="flex min-w-0 flex-1 flex-col">
+                <span className="text-[1.05rem] font-bold text-tc-ink">{o.title}</span>
+                <span className="text-[0.95rem] text-tc-ink-2">{o.body}</span>
+              </span>
+              {selected ? (
+                <CheckCircle2 className="mt-1 size-6 shrink-0 text-tc-primary" aria-hidden />
+              ) : null}
+            </button>
+          );
+        })}
       </fieldset>
 
       {initialPath === "donor" && role === "patient" ? (
-        <p className="rounded-md bg-tc-accent/40 px-3 py-2 text-sm">
+        <p className="rounded-2xl bg-tc-accent px-5 py-4 font-semibold text-tc-ink">
           You&apos;ll be able to turn on Data Donor during setup. It&apos;s always optional.
         </p>
       ) : null}
 
-      <div className="space-y-1.5">
+      <div className="space-y-2">
         <Label htmlFor="name">Your name</Label>
         <Input id="name" name="name" autoComplete="name" required />
       </div>
 
       {role !== "patient" ? (
-        <div className="space-y-1.5">
+        <div className="space-y-2">
           <Label htmlFor="org">{role === "clinic" ? "Clinic name" : "Organization name"}</Label>
           <Input id="org" name="org" autoComplete="organization" required />
         </div>
       ) : null}
 
       {role === "clinic" ? (
-        <div className="space-y-1.5">
+        <div className="space-y-2">
           <Label htmlFor="town">Clinic town</Label>
           <select
             id="town"
             name="town"
             defaultValue="Boston"
-            className="h-10 w-full rounded-md border border-border bg-card px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            aria-describedby="town-help"
+            className="min-h-[3.1rem] w-full rounded-[14px] border-2 border-input bg-white px-3 text-[1.05rem] text-tc-ink focus-visible:border-tc-primary focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-tc-primary-soft"
           >
             {towns.map((t) => <option key={t} value={t}>{t}</option>)}
           </select>
-          <p className="text-xs text-muted-foreground">Used to find participants near your site.</p>
+          <p id="town-help" className="text-[0.95rem] text-tc-muted">Used to find participants near your site.</p>
         </div>
       ) : null}
 
-      <div className="space-y-1.5">
+      <div className="space-y-2">
         <Label htmlFor="email">Email</Label>
         <Input id="email" name="email" type="email" autoComplete="email" required />
       </div>
-      <div className="space-y-1.5">
+      <div className="space-y-2">
         <Label htmlFor="password">Password</Label>
         <Input
           id="password"
@@ -124,17 +148,28 @@ export function SignupForm({ initialPath, towns }: { initialPath?: string; towns
           required
           aria-describedby="password-help"
         />
-        <p id="password-help" className="text-xs text-muted-foreground">At least 10 characters.</p>
+        <p id="password-help" className="text-[0.95rem] text-tc-muted">At least 10 characters.</p>
       </div>
 
-      <label className="flex items-start gap-2 text-sm">
-        <input type="checkbox" name="agreed" required className="mt-1 size-4 accent-[var(--tc-primary)]" />
+      <label className="flex cursor-pointer items-start gap-3 rounded-2xl bg-tc-mist p-4 text-[1rem] text-tc-ink-2">
+        <input
+          type="checkbox"
+          name="agreed"
+          required
+          className="mt-0.5 size-5 shrink-0 accent-[var(--tc-primary)]"
+        />
         <span>
           I agree to the{" "}
           {AGREEMENT[role].map((a, i) => (
             <span key={a.href}>
               {i > 0 ? " and " : ""}
-              <Link href={a.href} target="_blank" className="text-primary hover:underline">{a.label}</Link>
+              <Link
+                href={a.href}
+                target="_blank"
+                className="font-bold text-tc-primary-ink underline underline-offset-4"
+              >
+                {a.label}
+              </Link>
             </span>
           ))}
           .{role === "patient" ? " TrialCave is for adults 18 and older." : ""}
@@ -142,12 +177,12 @@ export function SignupForm({ initialPath, towns }: { initialPath?: string; towns
       </label>
 
       {state.error ? (
-        <p role="alert" className="text-sm text-tc-danger">
+        <p role="alert" className="rounded-2xl bg-tc-danger-soft px-5 py-4 font-semibold text-tc-danger-ink">
           {state.error}
         </p>
       ) : null}
 
-      <Button type="submit" className="w-full" disabled={pending}>
+      <Button type="submit" size="lg" className="w-full" disabled={pending}>
         {pending ? "Creating your account…" : "Create account"}
       </Button>
     </form>

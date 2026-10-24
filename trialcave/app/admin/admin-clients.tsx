@@ -47,7 +47,7 @@ export function VerifyClinicButton({ clinicId, verified }: { clinicId: string; v
 export function IrbToggle({ clinicId, onFile }: { clinicId: string; onFile: boolean }) {
   const { pending, run } = useRunner();
   return (
-    <Button size="sm" variant="ghost" disabled={pending} aria-pressed={onFile} onClick={() => run(() => setIrbOnFile(clinicId, !onFile), () => (onFile ? "IRB letter marked missing." : "IRB letter marked on file."))}>
+    <Button size="sm" variant="outline" disabled={pending} aria-pressed={onFile} className={onFile ? "border-tc-success-soft bg-tc-success-soft text-tc-success-ink" : undefined} onClick={() => run(() => setIrbOnFile(clinicId, !onFile), () => (onFile ? "IRB letter marked missing." : "IRB letter marked on file."))}>
       IRB on file: {onFile ? "Yes" : "No"}
     </Button>
   );
@@ -61,7 +61,7 @@ export function ProjectDecisionButtons({ projectId, status }: { projectId: strin
         <Button size="sm" disabled={pending} onClick={() => run(() => setProjectStatus(projectId, "approved"), () => "Project approved.")}>Approve</Button>
       ) : null}
       {status !== "rejected" ? (
-        <Button size="sm" variant="ghost" disabled={pending} onClick={() => run(() => setProjectStatus(projectId, "rejected"), () => (status === "approved" ? "Project access revoked." : "Project rejected."))}>
+        <Button size="sm" variant="outline" className="hover:border-tc-danger-ink hover:text-tc-danger-ink" disabled={pending} onClick={() => run(() => setProjectStatus(projectId, "rejected"), () => (status === "approved" ? "Project access revoked." : "Project rejected."))}>
           {status === "approved" ? "Revoke" : "Reject"}
         </Button>
       ) : null}
@@ -72,12 +72,11 @@ export function ProjectDecisionButtons({ projectId, status }: { projectId: strin
 export function TrialAdminButtons({ aiAvailable }: { aiAvailable: boolean }) {
   const { pending, run } = useRunner();
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <Button size="sm" variant="outline" disabled={pending} onClick={() => run(resyncTrials, (r) => `Synced ${r.fetched} trials from ClinicalTrials.gov.`)}>
+    <div className="flex flex-wrap items-center gap-3">
+      <Button variant="outline" disabled={pending} onClick={() => run(resyncTrials, (r) => `Synced ${r.fetched} trials from ClinicalTrials.gov.`)}>
         {pending ? "Working…" : "Re-sync now"}
       </Button>
       <Button
-        size="sm"
         variant="outline"
         disabled={pending || !aiAvailable}
         title={aiAvailable ? undefined : "Needs ANTHROPIC_API_KEY"}
@@ -85,7 +84,7 @@ export function TrialAdminButtons({ aiAvailable }: { aiAvailable: boolean }) {
       >
         Parse pending (10)
       </Button>
-      {!aiAvailable ? <span className="text-xs text-muted-foreground">Parsing needs an Anthropic API key.</span> : null}
+      {!aiAvailable ? <span className="text-[0.95rem] text-tc-muted">Parsing needs an Anthropic API key.</span> : null}
     </div>
   );
 }
@@ -93,17 +92,17 @@ export function TrialAdminButtons({ aiAvailable }: { aiAvailable: boolean }) {
 export function ResetDemoButton({ enabled }: { enabled: boolean }) {
   const { pending, run } = useRunner();
   const [confirming, setConfirming] = useState(false);
-  if (!enabled) return <p className="text-sm text-muted-foreground">Reset is only available in demo mode.</p>;
+  if (!enabled) return <p className="rounded-2xl bg-tc-mist px-5 py-4 font-semibold text-tc-ink-2">Reset is only available in demo mode.</p>;
   if (!confirming) {
     return <Button variant="destructive" onClick={() => setConfirming(true)}>Reset demo</Button>;
   }
   return (
-    <span role="alertdialog" aria-label="Confirm demo reset" className="flex flex-wrap items-center gap-2">
-      <span className="text-sm">This wipes and reseeds all demo data. It can take a minute. Sure?</span>
-      <Button size="sm" variant="destructive" disabled={pending} onClick={() => run(resetDemo, () => "Demo reset.", () => setConfirming(false))}>
+    <div role="alertdialog" aria-label="Confirm demo reset" className="flex max-w-[40rem] flex-wrap items-center gap-3 rounded-2xl border-2 border-tc-danger-soft bg-white p-5 shadow-pop">
+      <span className="w-full text-[1.05rem] font-bold text-tc-danger-ink">This wipes and reseeds all demo data. It can take a minute. Sure?</span>
+      <Button variant="destructive" disabled={pending} onClick={() => run(resetDemo, () => "Demo reset.", () => setConfirming(false))}>
         {pending ? "Resetting…" : "Confirm reset"}
       </Button>
-      <Button size="sm" variant="ghost" disabled={pending} onClick={() => setConfirming(false)}>Cancel</Button>
-    </span>
+      <Button variant="outline" disabled={pending} onClick={() => setConfirming(false)}>Cancel</Button>
+    </div>
   );
 }

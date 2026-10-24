@@ -60,16 +60,18 @@ function CriterionRow({
     c.kind === "exclusion" ? (c.status === "pass" ? "Doesn't apply: " : c.status === "fail" ? "This rules you out: " : "") : "";
   const isLabUnknown = c.status === "unknown" && c.field && LAB_CATEGORIES.has(c.category) && !c.patientQuestion;
 
+  const highlighted = showQuestion && Boolean(c.patientQuestion);
+
   return (
-    <div className="flex gap-3 py-3">
+    <div className={`flex gap-3 border-t border-tc-border py-4 first:border-t-0 ${highlighted ? "my-1 rounded-xl border-t-0 bg-tc-primary-soft px-4" : ""}`}>
       <CriterionIcon status={c.status} kind={c.kind} className="mt-0.5" />
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-medium">
+        <p className="text-[1.05rem] font-bold text-tc-ink">
           {prefix}
           {c.plainText}
         </p>
-        {c.reason ? <p className="text-sm text-muted-foreground">{c.reason}</p> : null}
-        <div className="mt-1 flex flex-wrap gap-1">
+        {c.reason ? <p className="mt-0.5 text-[1rem] text-tc-ink-2">{c.reason}</p> : null}
+        <div className="mt-2 flex flex-wrap gap-1.5">
           {c.source === "data" && c.evidenceLabel ? (
             <Badge variant="muted">Your record · {c.evidenceLabel}</Badge>
           ) : c.source === "data" ? (
@@ -82,15 +84,15 @@ function CriterionRow({
         </div>
 
         {showQuestion && c.patientQuestion ? (
-          <div className="mt-2 flex flex-wrap items-center gap-2" role="group" aria-label={c.patientQuestion}>
-            <span className="text-sm">{c.patientQuestion}</span>
+          <div className="mt-3 flex flex-wrap items-center gap-2" role="group" aria-label={c.patientQuestion}>
+            <span className="w-full text-[1.05rem] font-semibold text-tc-ink">{c.patientQuestion}</span>
             <Button size="sm" variant="outline" disabled={pending} onClick={() => answer("yes")}>Yes</Button>
             <Button size="sm" variant="outline" disabled={pending} onClick={() => answer("no")}>No</Button>
             <Button size="sm" variant="ghost" disabled={pending} onClick={() => answer("unsure")}>Not sure</Button>
           </div>
         ) : null}
         {isLabUnknown ? (
-          <Button asChild size="sm" variant="outline" className="mt-2">
+          <Button asChild size="sm" variant="outline" className="mt-3">
             <Link href="/app/profile?tab=labs">Add lab result</Link>
           </Button>
         ) : null}
@@ -160,13 +162,15 @@ function ApplyPanel({
     };
     return (
       <Card>
-        <CardContent className="pt-6">
-          <h2 className="text-lg font-semibold">Your application</h2>
-          <p className="mt-1 text-sm">{statusText[application.status] ?? application.status}</p>
-          <p className="mt-2 text-sm text-muted-foreground">
+        <CardContent className="pt-6 sm:pt-7">
+          <h2 className="text-[1.45rem] font-extrabold tracking-tight">Your application</h2>
+          <p className="mt-3 rounded-2xl bg-tc-primary-soft px-5 py-4 text-[1.05rem] font-semibold text-tc-primary-ink">
+            {statusText[application.status] ?? application.status}
+          </p>
+          <p className="mt-3 text-[1rem] text-tc-ink-2">
             Shared: {application.sharedFields.map(shareFieldLabel).join(", ") || "nothing"}
           </p>
-          <Button variant="outline" className="mt-3" onClick={withdraw} disabled={pending}>
+          <Button variant="outline" className="mt-4" onClick={withdraw} disabled={pending}>
             {pending ? "Withdrawing…" : "Withdraw application"}
           </Button>
         </CardContent>
@@ -176,50 +180,60 @@ function ApplyPanel({
 
   if (!open) {
     return (
-      <div className="flex flex-wrap items-center gap-3">
-        <Button onClick={() => setOpen(true)}>Apply</Button>
-        {application?.status === "withdrawn" ? (
-          <span className="text-sm text-muted-foreground">You withdrew an earlier application. You can apply again.</span>
-        ) : null}
+      <div className="on-dark flex flex-wrap items-center justify-between gap-4 rounded-[26px] bg-tc-night p-7 text-white">
+        <div>
+          <p className="text-[1.15rem] font-bold">Interested in this study?</p>
+          {application?.status === "withdrawn" ? (
+            <p className="mt-1 text-[1rem] text-tc-night-text">You withdrew an earlier application. You can apply again.</p>
+          ) : null}
+        </div>
+        <Button variant="mint" size="lg" onClick={() => setOpen(true)}>Apply</Button>
       </div>
     );
   }
 
   return (
     <Card>
-      <CardContent className="pt-6">
-        <h2 className="text-lg font-semibold">Choose what to share with {clinicName}</h2>
-        <p className="text-sm text-muted-foreground">
+      <CardContent className="pt-6 sm:pt-7">
+        <h2 className="text-[1.45rem] font-extrabold tracking-tight">Choose what to share with {clinicName}</h2>
+        <p className="mt-1 text-[1.05rem] text-tc-ink-2">
           The study team sees only what you pick. You can withdraw anytime.
         </p>
-        <fieldset className="mt-3 space-y-2">
+        <fieldset className="mt-4 grid gap-3 sm:grid-cols-2">
           <legend className="sr-only">Fields to share</legend>
           {SHARE_FIELDS.map((f) => (
-            <label key={f.key} className="flex items-center gap-3 text-sm">
+            <label
+              key={f.key}
+              className="flex min-h-[3.25rem] cursor-pointer items-center gap-3 rounded-2xl border-2 border-tc-border px-4 py-3 text-[1.05rem] text-tc-ink has-[[data-state=checked]]:border-tc-primary"
+            >
               <Checkbox
                 checked={Boolean(shared[f.key])}
                 onCheckedChange={(v) => setShared((s) => ({ ...s, [f.key]: Boolean(v) }))}
               />
-              <span>{f.label}</span>
+              <span className="font-semibold">{f.label}</span>
               {f.sensitive ? (
-                <Badge variant="muted" className="gap-1"><Lock className="size-3" aria-hidden /> Sensitive</Badge>
+                <Badge variant="muted" className="ml-auto"><Lock className="size-3.5" aria-hidden /> Sensitive</Badge>
               ) : null}
             </label>
           ))}
         </fieldset>
         {shared.phone ? (
-          <div className="mt-3 max-w-xs space-y-1.5">
+          <div className="mt-4 max-w-sm space-y-2">
             <Label htmlFor="apply-phone">Phone number</Label>
             <Input id="apply-phone" type="tel" autoComplete="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />
           </div>
         ) : null}
-        <div className="mt-4 rounded-md bg-muted/50 p-3 text-sm">
-          <p className="font-medium">{clinicName} will see:</p>
-          <p className="text-muted-foreground">{chosen.length ? chosen.map((f) => f.label).join(", ") : "Nothing yet"}</p>
-          {!hasContact ? <p className="mt-1 text-tc-danger">Pick email or phone so they can reach you.</p> : null}
+        <div className="mt-5 rounded-2xl bg-tc-mist p-5 text-[1.05rem]">
+          <p className="font-bold text-tc-ink">{clinicName} will see:</p>
+          <p className="mt-1 text-tc-ink-2">{chosen.length ? chosen.map((f) => f.label).join(", ") : "Nothing yet"}</p>
+          {!hasContact ? (
+            <p className="mt-3 rounded-xl bg-tc-danger-soft px-4 py-3 font-semibold text-tc-danger-ink" role="alert">
+              Pick email or phone so they can reach you.
+            </p>
+          ) : null}
         </div>
-        <div className="mt-4 flex gap-2">
-          <Button onClick={submit} disabled={pending || !hasContact}>
+        <div className="mt-5 flex flex-wrap gap-3">
+          <Button size="lg" onClick={submit} disabled={pending || !hasContact}>
             {pending ? "Sending…" : "Send application"}
           </Button>
           <Button variant="ghost" onClick={() => setOpen(false)} disabled={pending}>Cancel</Button>
@@ -271,13 +285,13 @@ export function MatchDetailClient({
 
   return (
     <div>
-      <Card className="mt-4">
-        <CardContent className="pt-6">
-          <h2 className="text-lg font-semibold">Requirements</h2>
+      <Card>
+        <CardContent className="pt-6 sm:pt-7">
+          <h2 className="text-[1.45rem] font-extrabold tracking-tight">Requirements</h2>
           {visibleInclusion.length === 0 ? (
-            <p className="mt-2 text-sm text-muted-foreground">No requirements we can check from your profile.</p>
+            <p className="mt-3 rounded-2xl bg-tc-mist px-5 py-4 text-[1rem] text-tc-ink-2">No requirements we can check from your profile.</p>
           ) : (
-            <div className="mt-1 divide-y divide-border">
+            <div className="mt-2">
               {visibleInclusion.map((c) => (
                 <CriterionRow key={c.criterionId} trialId={trialId} c={c} showQuestion={askIds.has(c.criterionId)} />
               ))}
@@ -286,8 +300,8 @@ export function MatchDetailClient({
 
           {visibleExclusion.length > 0 ? (
             <>
-              <h2 className="mt-6 text-lg font-semibold">Things that would rule you out</h2>
-              <div className="mt-1 divide-y divide-border">
+              <h2 className="mt-8 text-[1.45rem] font-extrabold tracking-tight">Things that would rule you out</h2>
+              <div className="mt-2">
                 {visibleExclusion.map((c) => (
                   <CriterionRow key={c.criterionId} trialId={trialId} c={c} showQuestion={askIds.has(c.criterionId)} />
                 ))}
@@ -296,21 +310,21 @@ export function MatchDetailClient({
           ) : null}
 
           {teamChecks.length > 0 ? (
-            <div className="mt-4 border-t border-border pt-3">
+            <div className="mt-6 border-t border-tc-border pt-4">
               <button
                 type="button"
                 onClick={() => setShowTeam((s) => !s)}
                 aria-expanded={showTeam}
-                className="flex items-center gap-1 rounded text-sm font-medium text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                className="flex min-h-11 items-center gap-2 rounded-lg text-[1rem] font-bold text-tc-primary-ink hover:underline focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-tc-primary-soft"
               >
-                <ChevronDown className={`size-4 transition-transform ${showTeam ? "rotate-180" : ""}`} aria-hidden />
+                <ChevronDown className={`size-5 transition-transform ${showTeam ? "rotate-180" : ""}`} aria-hidden />
                 The study team will check these ({teamChecks.length})
               </button>
               {showTeam ? (
-                <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
+                <ul className="mt-2 space-y-2 rounded-2xl bg-tc-mist p-4 text-[1rem] text-tc-ink-2">
                   {teamChecks.map((c) => (
                     <li key={c.criterionId} className="flex gap-2">
-                      <CriterionIcon status={c.status} kind={c.kind} className="[&_svg]:size-4" />
+                      <CriterionIcon status={c.status} kind={c.kind} className="[&_svg]:size-5" />
                       <span>{c.kind === "exclusion" ? "Rules out: " : ""}{c.plainText}</span>
                     </li>
                   ))}
@@ -321,7 +335,7 @@ export function MatchDetailClient({
         </CardContent>
       </Card>
 
-      <div className="mt-6 flex flex-wrap items-start gap-3">
+      <div className="mt-6 flex flex-wrap items-start gap-4">
         {isClinicStudy ? (
           <div className="w-full">
             <ApplyPanel trialId={trialId} clinicName={clinicName} application={application} />

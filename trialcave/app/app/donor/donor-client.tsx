@@ -46,27 +46,27 @@ export function BecomeDonorForm() {
 
   return (
     <Card className="mt-6">
-      <CardContent className="space-y-4 pt-6">
-        <h2 className="text-lg font-semibold">Turn on Data Donor</h2>
-        <ul className="list-inside list-disc space-y-1 text-sm text-muted-foreground">
+      <CardContent className="space-y-5 pt-6 sm:pt-7">
+        <h2 className="text-[1.45rem] font-extrabold tracking-tight">Turn on Data Donor</h2>
+        <ul className="list-outside list-disc space-y-2 pl-5 text-[1.05rem] text-tc-ink-2 marker:text-tc-primary">
           <li>Your donated data is de-identified and stays inside the TrialCave Enclave.</li>
           <li>Researchers only ever get group results. Groups under 10 people are hidden.</li>
           <li>Paychecks are thank-you payments, not wages, and may be taxable.</li>
           <li>You can withdraw anytime. Matching and applying stay free either way.</li>
         </ul>
-        <label className="flex items-start gap-3 text-sm">
+        <label className="flex items-start gap-3 rounded-2xl bg-tc-mist p-4 text-[1.05rem] text-tc-ink">
           <Checkbox checked={agreed} onCheckedChange={(v) => setAgreed(Boolean(v))} className="mt-0.5" />
           <span>
             I agree to the{" "}
-            <Link href="/legal/donor-agreement" target="_blank" className="text-primary hover:underline">
+            <Link href="/legal/donor-agreement" target="_blank" className="font-bold text-tc-primary-ink hover:underline">
               Data Donor Agreement
             </Link>
             . I can withdraw anytime.
           </span>
         </label>
         <div>
-          <p className="text-sm font-medium">Choose what you allow (all off by default)</p>
-          <div className="mt-2">
+          <p className="text-[1.15rem] font-bold">Choose what you allow (all off by default)</p>
+          <div className="mt-3">
             <ConsentTable grid={grid} onToggle={toggle} disabled={pending} />
           </div>
         </div>
@@ -108,16 +108,16 @@ export function StopDonatingButton() {
     );
   }
   return (
-    <div role="alertdialog" aria-label="Stop donating?" className="space-y-2 rounded-md border border-border p-3 text-sm">
+    <div role="alertdialog" aria-label="Stop donating?" className="max-w-md space-y-4 rounded-[20px] bg-white p-6 text-[1.05rem] text-tc-ink shadow-pop">
       <p>
         Your data won&apos;t be used in any new analysis. Group results already produced can&apos;t be
         recalled. Paychecks you&apos;ve earned are kept.
       </p>
-      <div className="flex gap-2">
-        <Button size="sm" variant="destructive" onClick={stop} disabled={pending}>
+      <div className="flex flex-wrap gap-2">
+        <Button variant="destructive" onClick={stop} disabled={pending}>
           {pending ? "Stopping…" : "Yes, stop donating"}
         </Button>
-        <Button size="sm" variant="ghost" onClick={() => setConfirming(false)} disabled={pending}>
+        <Button variant="ghost" onClick={() => setConfirming(false)} disabled={pending}>
           Cancel
         </Button>
       </div>

@@ -1,7 +1,5 @@
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
-
 import { ClinicNav } from "@/components/clinic-nav";
+import { PageBody, PageHero } from "@/components/page-hero";
 import { getMyClinic, getSessionUser } from "@/lib/auth";
 import { NewStudyWizard } from "./new-study-wizard";
 
@@ -15,15 +13,10 @@ export default async function NewStudyPage() {
   return (
     <main className="flex-1">
       <ClinicNav email={user?.email ?? ""} clinicName={clinic.name} />
-      <div className="mx-auto max-w-[800px] px-4 py-8">
-        <Link href="/clinic" className="inline-flex items-center gap-1 text-sm text-primary hover:underline">
-          <ArrowLeft className="size-4" aria-hidden /> Studies
-        </Link>
-        <h1 className="mt-3 text-2xl font-semibold">New study</h1>
-        <div className="mt-6">
-          <NewStudyWizard clinicName={clinic.name} verified={clinic.verified} />
-        </div>
-      </div>
+      <PageHero tone="indigo" width="narrow" kicker={clinic.name} title="New study" back={{ href: "/clinic", label: "Studies" }} />
+      <PageBody width="narrow">
+        <NewStudyWizard clinicName={clinic.name} verified={clinic.verified} />
+      </PageBody>
     </main>
   );
 }

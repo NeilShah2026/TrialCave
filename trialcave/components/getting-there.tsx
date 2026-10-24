@@ -22,31 +22,37 @@ export function GettingThere(props: GettingThereProps) {
 
   return (
     <Card>
-      <CardContent className="pt-6">
-        <h2 className="text-lg font-semibold">Getting there</h2>
-        <p className="mt-2 flex items-center gap-2 text-sm">
-          <MapPin className="size-4 text-muted-foreground" aria-hidden />
-          {props.facility}{props.city ? `, ${props.city}` : ""}
-          {props.distanceMiles != null ? ` · ${props.distanceMiles} mi from ${props.patientTown}` : ""}
+      <CardContent className="pt-6 sm:pt-7">
+        <h2 className="text-[1.45rem] font-extrabold tracking-tight">Getting there</h2>
+        <p className="mt-3 flex items-start gap-2 text-[1.05rem] font-semibold text-tc-ink">
+          <MapPin className="mt-1 size-5 shrink-0 text-tc-primary" aria-hidden />
+          <span>
+            {props.facility}{props.city ? `, ${props.city}` : ""}
+            {props.distanceMiles != null ? ` · ${props.distanceMiles} mi from ${props.patientTown}` : ""}
+          </span>
         </p>
         {tooFar ? (
-          <p className="mt-1 text-sm text-tc-warning">A bit farther than your {props.travelRadiusMiles}-mile limit.</p>
-        ) : null}
-
-        {props.visitCount != null || props.durationWeeks != null ? (
-          <p className="mt-2 text-sm text-muted-foreground">
-            About {props.visitCount ?? "several"} visits
-            {props.durationWeeks != null ? ` over ${props.durationWeeks} weeks` : ""}.
+          <p className="mt-3 rounded-2xl bg-tc-warning-soft px-5 py-3 text-[1rem] font-semibold text-tc-warning-ink">
+            A bit farther than your {props.travelRadiusMiles}-mile limit.
           </p>
         ) : null}
-        {props.remoteOption ? <p className="text-sm text-muted-foreground">Some visits can be done from home.</p> : null}
-        {props.compensationMentioned ? (
-          <p className="text-sm text-muted-foreground">The study mentions payment or travel reimbursement. Ask the study team for details.</p>
-        ) : null}
 
-        <Button asChild variant="outline" size="sm" className="mt-3">
-          <a href={url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1">
-            <Bus className="size-4" aria-hidden /> Transit directions
+        <div className="mt-3 space-y-1 text-[1rem] text-tc-ink-2">
+          {props.visitCount != null || props.durationWeeks != null ? (
+            <p>
+              About {props.visitCount ?? "several"} visits
+              {props.durationWeeks != null ? ` over ${props.durationWeeks} weeks` : ""}.
+            </p>
+          ) : null}
+          {props.remoteOption ? <p>Some visits can be done from home.</p> : null}
+          {props.compensationMentioned ? (
+            <p>The study mentions payment or travel reimbursement. Ask the study team for details.</p>
+          ) : null}
+        </div>
+
+        <Button asChild variant="outline" className="mt-4">
+          <a href={url} target="_blank" rel="noopener noreferrer">
+            <Bus aria-hidden /> Transit directions
           </a>
         </Button>
       </CardContent>

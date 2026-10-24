@@ -99,12 +99,12 @@ function FactRow({ f }: { f: OverviewFact }) {
   const badge = f.fromDocument && f.observedAt ? `From your ${format(parseISO(f.observedAt), "MMM d")} record` : sourceLabel(f.source);
 
   return (
-    <li className="py-2 text-sm">
+    <li className="border-t border-tc-border py-3 text-[1.05rem] first:border-t-0">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <span className="font-medium">{f.label}</span>
+        <span className="font-bold text-tc-ink">{f.label}</span>
         <span className="flex flex-wrap items-center gap-2">
-          <span>{f.value}</span>
-          {f.observedAt ? <span className="text-xs text-muted-foreground">{format(parseISO(f.observedAt), "MMM yyyy")}</span> : null}
+          <span className="font-semibold text-tc-ink">{f.value}</span>
+          {f.observedAt ? <span className="text-[0.95rem] text-tc-muted">{format(parseISO(f.observedAt), "MMM yyyy")}</span> : null}
           <Badge variant="muted">{badge}</Badge>
           {!locked && f.type !== "text" ? (
             <Button size="sm" variant="ghost" onClick={() => setEditing((e) => !e)} aria-label={`Edit ${f.label}`} disabled={pending}>
@@ -125,7 +125,7 @@ function FactRow({ f }: { f: OverviewFact }) {
         </span>
       </div>
       {editing ? (
-        <div className="mt-2 flex flex-wrap items-center gap-2">
+        <div className="mt-3 flex flex-wrap items-center gap-2 rounded-2xl bg-tc-mist p-4">
           {f.type === "bool" ? (
             <>
               <Button size="sm" variant={f.valueBool ? "default" : "outline"} disabled={pending} onClick={() => run(() => editFact(f.id, { bool: true }), "Saved.", () => setEditing(false))}>Yes</Button>
@@ -138,7 +138,7 @@ function FactRow({ f }: { f: OverviewFact }) {
                 inputMode="decimal"
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
-                className="h-9 w-32"
+                className="w-36 bg-white"
               />
               <Button
                 size="sm"
@@ -203,22 +203,22 @@ export function ProfileTabs({
         <TabsTrigger value="devices">Devices</TabsTrigger>
       </TabsList>
 
-      <TabsContent value="overview">
+      <TabsContent value="overview" className="mt-6">
         <Card>
-          <CardContent className="pt-6">
+          <CardContent className="pt-6 sm:pt-7">
             {overview.length === 0 ? (
-              <div className="text-sm text-muted-foreground">
+              <div className="text-[1.05rem] text-tc-ink-2">
                 <p>No confirmed items yet.</p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <Button asChild size="sm"><Link href="/app/records">Add a record</Link></Button>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <Button asChild><Link href="/app/records">Add a record</Link></Button>
                 </div>
               </div>
             ) : (
-              <div className="space-y-5">
+              <div className="space-y-8">
                 {groups.map((g) => (
                   <section key={g.title}>
-                    <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">{g.title}</h2>
-                    <ul className="divide-y divide-border">
+                    <h2 className="text-[1.15rem] font-bold">{g.title}</h2>
+                    <ul className="mt-1">
                       {g.items.map((f) => <FactRow key={f.id} f={f} />)}
                     </ul>
                   </section>
@@ -226,10 +226,10 @@ export function ProfileTabs({
               </div>
             )}
             {displayOnly.length > 0 ? (
-              <div className="mt-5">
-                <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Other items from your records</h2>
-                <p className="text-xs text-muted-foreground">Not used for matching.</p>
-                <ul className="mt-1 divide-y divide-border">
+              <div className="mt-8 rounded-2xl bg-tc-mist p-5">
+                <h2 className="text-[1.15rem] font-bold">Other items from your records</h2>
+                <p className="text-[0.95rem] text-tc-muted">Not used for matching.</p>
+                <ul className="mt-2">
                   {displayOnly.map((f) => <FactRow key={f.id} f={f} />)}
                 </ul>
               </div>
@@ -238,25 +238,25 @@ export function ProfileTabs({
         </Card>
       </TabsContent>
 
-      <TabsContent value="labs">
+      <TabsContent value="labs" className="mt-6">
         <Card>
-          <CardContent className="pt-6">
-            <h2 className="text-lg font-semibold">Add lab results</h2>
-            <p className="text-sm text-muted-foreground">
+          <CardContent className="pt-6 sm:pt-7">
+            <h2 className="text-[1.45rem] font-extrabold tracking-tight">Add lab results</h2>
+            <p className="mt-1 text-[1.05rem] text-tc-ink-2">
               Fill in any you have. Values you type are used for matching. Uploading the lab report
               also counts for the Data Donor program.
             </p>
-            <div className="mt-3 space-y-1.5">
+            <div className="mt-5 space-y-2">
               <Label htmlFor="labdate">Test date</Label>
               <Input id="labdate" type="date" value={labDate} max={format(new Date(), "yyyy-MM-dd")} onChange={(e) => setLabDate(e.target.value)} className="max-w-xs" />
             </div>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <div className="mt-5 grid gap-4 sm:grid-cols-2">
               {LAB_FIELDS.map((l) => {
                 const cur = current.get(l.field);
                 return (
-                  <div key={l.field} className="space-y-1">
+                  <div key={l.field} className="space-y-2">
                     <Label htmlFor={l.field}>
-                      {l.label} <span className="font-normal text-muted-foreground">({l.unit})</span>
+                      {l.label} <span className="font-normal text-tc-muted">({l.unit})</span>
                     </Label>
                     <Input
                       id={l.field}
@@ -269,29 +269,29 @@ export function ProfileTabs({
                 );
               })}
             </div>
-            <Button className="mt-4" onClick={saveLabs} disabled={pending}>
+            <Button size="lg" className="mt-6" onClick={saveLabs} disabled={pending}>
               {pending ? "Saving…" : "Save lab results"}
             </Button>
           </CardContent>
         </Card>
       </TabsContent>
 
-      <TabsContent value="history">
+      <TabsContent value="history" className="mt-6">
         <Card>
-          <CardContent className="pt-6">
-            <h2 className="text-lg font-semibold">Health history</h2>
-            <p className="text-sm text-muted-foreground">Answer any that apply. One answer helps every trial.</p>
-            <ul className="mt-3 divide-y divide-border">
+          <CardContent className="pt-6 sm:pt-7">
+            <h2 className="text-[1.45rem] font-extrabold tracking-tight">Health history</h2>
+            <p className="mt-1 text-[1.05rem] text-tc-ink-2">Answer any that apply. One answer helps every trial.</p>
+            <ul className="mt-4">
               {HISTORY_FIELDS.map((h) => {
                 const cur = current.get(h.field);
                 const answer = cur?.valueBool;
                 return (
-                  <li key={h.field} className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm">
-                    <span>
+                  <li key={h.field} className="flex flex-wrap items-center justify-between gap-3 border-t border-tc-border py-3 text-[1.05rem] first:border-t-0">
+                    <span className="font-semibold text-tc-ink">
                       {h.label}
-                      {cur ? <span className="ml-2 text-xs text-muted-foreground">({sourceLabel(cur.source)})</span> : null}
+                      {cur ? <span className="ml-2 text-[0.95rem] font-normal text-tc-muted">({sourceLabel(cur.source)})</span> : null}
                     </span>
-                    <span className="flex gap-1" role="group" aria-label={h.label}>
+                    <span className="flex flex-wrap gap-2" role="group" aria-label={h.label}>
                       <Button
                         size="sm"
                         variant={answer === true ? "default" : "outline"}
@@ -328,37 +328,39 @@ export function ProfileTabs({
         </Card>
       </TabsContent>
 
-      <TabsContent value="devices">
+      <TabsContent value="devices" className="mt-6">
         <Card>
-          <CardContent className="pt-6">
-            <h2 className="text-lg font-semibold">Devices and portals</h2>
-            <p className="text-sm text-muted-foreground">
+          <CardContent className="pt-6 sm:pt-7">
+            <h2 className="text-[1.45rem] font-extrabold tracking-tight">Devices and portals</h2>
+            <p className="mt-1 text-[1.05rem] text-tc-ink-2">
               Demo mode: connecting adds 90 days of sample data so you can see how this works. Device
               data can&apos;t be edited by hand. We never collect location or GPS data.
             </p>
             {devices.connected.length > 0 ? (
-              <div className="mt-4 grid gap-3 sm:grid-cols-4">
+              <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 {[
                   { label: "Daily steps", value: devices.avgSteps != null ? Math.round(devices.avgSteps).toLocaleString() : "—" },
                   { label: "Resting heart rate", value: devices.avgRestingHr != null ? `${Math.round(devices.avgRestingHr)} bpm` : "—" },
                   { label: "Sleep", value: devices.avgSleep != null ? `${devices.avgSleep} h` : "—" },
                   { label: "Time in range", value: devices.avgTimeInRange != null ? `${Math.round(devices.avgTimeInRange)}%` : "—" },
                 ].map((s) => (
-                  <div key={s.label} className="rounded-md border border-border p-3">
-                    <p className="text-xs text-muted-foreground">{s.label} · 30-day avg</p>
-                    <p className="text-lg font-semibold">{s.value}</p>
+                  <div key={s.label} className="rounded-2xl bg-tc-mist p-4">
+                    <p className="text-[0.95rem] text-tc-muted">{s.label} · 30-day avg</p>
+                    <p className="mt-1 text-[1.45rem] font-extrabold text-tc-ink">{s.value}</p>
                   </div>
                 ))}
               </div>
             ) : null}
-            <ul className="mt-4 divide-y divide-border">
+            <ul className="mt-5">
               {CONNECTOR_SOURCES.map((s) => {
                 const connected = devices.connected.includes(s.value);
                 const Icon = s.kind === "portal" ? Hospital : s.kind === "cgm" ? Activity : Watch;
                 return (
-                  <li key={s.value} className="flex items-center justify-between gap-2 py-2 text-sm">
-                    <span className="flex items-center gap-2">
-                      <Icon className="size-4 text-muted-foreground" aria-hidden />
+                  <li key={s.value} className="flex flex-wrap items-center justify-between gap-3 border-t border-tc-border py-3 text-[1.05rem] first:border-t-0">
+                    <span className="flex flex-wrap items-center gap-3 font-semibold text-tc-ink">
+                      <span className="flex size-10 items-center justify-center rounded-xl bg-tc-primary-soft text-tc-primary-ink">
+                        <Icon className="size-5" aria-hidden />
+                      </span>
                       {s.label}
                       {connected ? <Badge variant="success">Connected</Badge> : null}
                     </span>

@@ -1,15 +1,17 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ExternalLink, Mail, Phone } from "lucide-react";
+import { ExternalLink, Mail, Phone } from "lucide-react";
 
 import { PatientNav } from "@/components/patient-nav";
+import { PageBody, PageHero } from "@/components/page-hero";
+import { PILL_VARIANT } from "@/components/match-card";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { getMyPatient, getSessionUser } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { loadMatches, loadProfile } from "@/lib/patient";
-import { STATUS_LABEL, STATUS_VARIANT, scorePct } from "@/lib/match-status";
+import { STATUS_LABEL, scorePct } from "@/lib/match-status";
 import { translateText } from "@/lib/ai/translate";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { TranslatedText } from "@/components/translated-text";
@@ -102,47 +104,49 @@ export default async function MatchDetailPage({ params }: { params: Promise<{ tr
   return (
     <main className="flex-1">
       <PatientNav email={user?.email ?? ""} />
-      <div className="mx-auto max-w-[800px] px-4 py-8">
-        <Link href="/app/matches" className="inline-flex items-center gap-1 text-sm text-primary hover:underline">
-          <ArrowLeft className="size-4" aria-hidden /> Matches
-        </Link>
-
-        <div className="mt-4 flex flex-wrap items-start justify-between gap-3">
-          <h1 className="text-2xl font-semibold">{trial.title}</h1>
-          {match ? <Badge variant={STATUS_VARIANT[match.status]}>{STATUS_LABEL[match.status]}</Badge> : null}
-        </div>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {sourceLabel}
-          {trial.phases?.length ? ` · ${trial.phases.join(", ").replace(/PHASE/g, "Phase ")}` : ""}
-          {nearestMiles != null ? ` · ${nearestMiles} mi` : ""}
-        </p>
-        <div className="mt-3">
+      <PageHero
+        tone="teal"
+        width="narrow"
+        back={{ href: "/app/matches", label: "Matches" }}
+        kicker={
+          <>
+            {sourceLabel}
+            {trial.phases?.length ? ` · ${trial.phases.join(", ").replace(/PHASE/g, "Phase ")}` : ""}
+            {nearestMiles != null ? ` · ${nearestMiles} mi` : ""}
+          </>
+        }
+        title={trial.title}
+      >
+        <div className="flex flex-col gap-4">
+          {match ? (
+            <div className="flex flex-wrap items-center gap-4">
+              <Badge variant={PILL_VARIANT[match.status]} className="px-4 py-1.5 text-[0.95rem] ring-2 ring-white">
+                {STATUS_LABEL[match.status]}
+              </Badge>
+              <Progress value={scorePct(match.score)} className="max-w-[200px] bg-white" aria-label={`Match score ${scorePct(match.score)}%`} />
+              <span className="text-[1rem] font-semibold text-tc-ink-2">
+                {scorePct(match.score)}% · {match.passCount} met{match.unknownCount ? ` · ${match.unknownCount} unknown` : ""}
+              </span>
+            </div>
+          ) : null}
           <LanguageSwitcher current={lang} />
         </div>
+      </PageHero>
+      <PageBody width="narrow">
+        <div className="space-y-6">
+          {summaryText ? (
+            <Card>
+              <CardContent className="pt-6 sm:pt-7">
+                <h2 className="text-[1.45rem] font-extrabold tracking-tight">In plain words</h2>
+                <p className="mt-3 text-[1.1rem] leading-relaxed text-tc-ink">
+                  <TranslatedText original={summaryText} translated={summaryTr.text} machine={summaryTr.machine} />
+                </p>
+                {trial.what_is_involved ? <p className="mt-3 rounded-2xl bg-tc-mist p-5 text-[1.05rem] text-tc-ink-2">{trial.what_is_involved}</p> : null}
+              </CardContent>
+            </Card>
+          ) : null}
 
-        {match ? (
-          <div className="mt-3 flex items-center gap-3">
-            <Progress value={scorePct(match.score)} className="max-w-[200px]" aria-label={`Match score ${scorePct(match.score)}%`} />
-            <span className="text-sm text-muted-foreground">
-              {scorePct(match.score)}% · {match.passCount} met{match.unknownCount ? ` · ${match.unknownCount} unknown` : ""}
-            </span>
-          </div>
-        ) : null}
-
-        {summaryText ? (
-          <Card className="mt-4">
-            <CardContent className="pt-6">
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">In plain words</h2>
-              <p className="mt-2 text-sm">
-                <TranslatedText original={summaryText} translated={summaryTr.text} machine={summaryTr.machine} />
-              </p>
-              {trial.what_is_involved ? <p className="mt-2 text-sm text-muted-foreground">{trial.what_is_involved}</p> : null}
-            </CardContent>
-          </Card>
-        ) : null}
-
-        {nearestSite?.facility ? (
-          <div className="mt-4">
+          {nearestSite?.facility ? (
             <GettingThere
               patientTown={patientRow?.town ?? ""}
               travelRadiusMiles={patientRow?.travel_radius_miles ?? 25}
@@ -154,73 +158,71 @@ export default async function MatchDetailPage({ params }: { params: Promise<{ tr
               remoteOption={trialLogistics.remote_option ?? null}
               compensationMentioned={trialLogistics.compensation_mentioned ?? null}
             />
-          </div>
-        ) : null}
+          ) : null}
 
-        {!match ? (
-          <Card className="mt-4">
-            <CardContent className="pt-6 text-sm text-muted-foreground">
+          {!match ? (
+            <p className="rounded-2xl bg-tc-warning-soft px-5 py-4 text-[1.05rem] font-semibold text-tc-warning-ink">
               This trial isn&apos;t in your current matches. It may be outside your age, sex, or
               travel range. You can widen your travel distance in{" "}
-              <Link href="/app/settings" className="text-primary hover:underline">Settings</Link>.
-            </CardContent>
-          </Card>
-        ) : (
-          <MatchDetailClient
-            trialId={trialId}
-            isClinicStudy={trial.source === "clinic"}
-            clinicName={clinicName}
-            application={application}
-            inclusion={inclusion}
-            exclusion={exclusion}
-            logistics={logistics}
-            maxQuestions={MAX_QUESTIONS_PER_TRIAL}
-          />
-        )}
+              <Link href="/app/settings" className="underline underline-offset-4">Settings</Link>.
+            </p>
+          ) : (
+            <MatchDetailClient
+              trialId={trialId}
+              isClinicStudy={trial.source === "clinic"}
+              clinicName={clinicName}
+              application={application}
+              inclusion={inclusion}
+              exclusion={exclusion}
+              logistics={logistics}
+              maxQuestions={MAX_QUESTIONS_PER_TRIAL}
+            />
+          )}
 
-        {trial.source === "ctgov" ? (
-          <Card className="mt-6">
-            <CardContent className="pt-6">
-              <h2 className="text-lg font-semibold">Contact the study team</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                This study is listed on ClinicalTrials.gov. Reach out to the team directly, and bring
-                your pre-screen summary.
-              </p>
-              {contacts.length > 0 ? (
-                <ul className="mt-3 space-y-2 text-sm">
-                  {contacts.map((c, i) => (
-                    <li key={i}>
-                      <p className="font-medium">{c.name ?? "Study contact"}</p>
-                      <div className="flex flex-wrap gap-x-4 gap-y-1 text-muted-foreground">
-                        {c.phone ? (
-                          <a href={`tel:${c.phone}`} className="inline-flex items-center gap-1 hover:text-primary">
-                            <Phone className="size-3" aria-hidden /> {c.phone}
-                          </a>
-                        ) : null}
-                        {c.email ? (
-                          <a href={`mailto:${c.email}`} className="inline-flex items-center gap-1 hover:text-primary">
-                            <Mail className="size-3" aria-hidden /> {c.email}
-                          </a>
-                        ) : null}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
-              {trial.nct_id ? (
-                <a
-                  className="mt-3 inline-flex items-center gap-1 text-sm text-primary hover:underline"
-                  href={`https://clinicaltrials.gov/study/${trial.nct_id}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  View {trial.nct_id} on ClinicalTrials.gov <ExternalLink className="size-3" aria-hidden />
-                </a>
-              ) : null}
-            </CardContent>
-          </Card>
-        ) : null}
-      </div>
+          {trial.source === "ctgov" ? (
+            <Card>
+              <CardContent className="pt-6 sm:pt-7">
+                <h2 className="text-[1.45rem] font-extrabold tracking-tight">Contact the study team</h2>
+                <p className="mt-2 text-[1.05rem] text-tc-ink-2">
+                  This study is listed on ClinicalTrials.gov. Reach out to the team directly, and bring
+                  your pre-screen summary.
+                </p>
+                {contacts.length > 0 ? (
+                  <ul className="mt-4 space-y-3">
+                    {contacts.map((c, i) => (
+                      <li key={i} className="rounded-2xl bg-tc-mist p-4">
+                        <p className="text-[1.05rem] font-bold text-tc-ink">{c.name ?? "Study contact"}</p>
+                        <div className="mt-1 flex flex-wrap gap-x-5 gap-y-1 text-[1rem]">
+                          {c.phone ? (
+                            <a href={`tel:${c.phone}`} className="inline-flex min-h-11 items-center gap-2 font-semibold text-tc-primary-ink hover:underline">
+                              <Phone className="size-4" aria-hidden /> {c.phone}
+                            </a>
+                          ) : null}
+                          {c.email ? (
+                            <a href={`mailto:${c.email}`} className="inline-flex min-h-11 items-center gap-2 font-semibold text-tc-primary-ink hover:underline">
+                              <Mail className="size-4" aria-hidden /> {c.email}
+                            </a>
+                          ) : null}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+                {trial.nct_id ? (
+                  <a
+                    className="mt-4 inline-flex min-h-11 items-center gap-2 text-[1rem] font-bold text-tc-primary-ink hover:underline"
+                    href={`https://clinicaltrials.gov/study/${trial.nct_id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    View {trial.nct_id} on ClinicalTrials.gov <ExternalLink className="size-4" aria-hidden />
+                  </a>
+                ) : null}
+              </CardContent>
+            </Card>
+          ) : null}
+        </div>
+      </PageBody>
     </main>
   );
 }

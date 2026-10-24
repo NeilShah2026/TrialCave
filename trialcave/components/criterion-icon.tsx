@@ -32,11 +32,11 @@ export function CriterionIcon({
 
   const Icon = status === "pass" ? CheckCircle2 : status === "fail" ? XCircle : status === "unknown" ? HelpCircle : MinusCircle;
   const color =
-    status === "pass" ? "text-tc-success" : status === "fail" ? "text-tc-danger" : status === "unknown" ? "text-tc-warning" : "text-muted-foreground";
+    status === "pass" ? "text-tc-success" : status === "fail" ? "text-tc-danger" : status === "unknown" ? "text-tc-warning" : "text-tc-muted";
 
   return (
     <span className={cn("inline-flex shrink-0", className)}>
-      <Icon className={cn("size-5", color)} aria-hidden />
+      <Icon className={cn("size-6", color)} strokeWidth={2.25} aria-hidden />
       <span className="sr-only">{label}</span>
     </span>
   );

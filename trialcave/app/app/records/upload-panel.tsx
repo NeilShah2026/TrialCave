@@ -88,9 +88,9 @@ export function UploadPanel({ demoMode }: { demoMode: boolean }) {
 
   return (
     <Card>
-      <CardContent className="pt-6">
-        <h2 className="text-lg font-semibold">Add a record</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
+      <CardContent className="pt-6 sm:pt-7">
+        <h2 className="text-[1.45rem] font-extrabold tracking-tight">Add a record</h2>
+        <p className="mt-1 text-[1.05rem] text-tc-ink-2">
           Upload a visit summary or lab report, or take photos of your paperwork.
           We read it and show you everything to confirm before anything is used.
         </p>
@@ -107,15 +107,15 @@ export function UploadPanel({ demoMode }: { demoMode: boolean }) {
             onPick(e.dataTransfer.files);
           }}
           className={cn(
-            "mt-4 rounded-xl border-2 border-dashed p-4 transition-colors",
-            dragging ? "border-primary bg-tc-primary-soft" : "border-border",
+            "mt-5 rounded-2xl border-2 border-dashed p-6 transition-colors",
+            dragging ? "border-tc-primary bg-tc-primary-soft" : "border-tc-border bg-tc-mist",
           )}
         >
           <div className="flex flex-wrap gap-3">
-            <Button type="button" variant="outline" onClick={() => cameraRef.current?.click()} disabled={pending}>
+            <Button type="button" size="lg" onClick={() => cameraRef.current?.click()} disabled={pending}>
               <Camera aria-hidden /> Take photos
             </Button>
-            <Button type="button" variant="outline" onClick={() => fileRef.current?.click()} disabled={pending}>
+            <Button type="button" size="lg" variant="outline" onClick={() => fileRef.current?.click()} disabled={pending}>
               <Upload aria-hidden /> Upload a file
             </Button>
             {demoMode ? (
@@ -124,7 +124,7 @@ export function UploadPanel({ demoMode }: { demoMode: boolean }) {
               </Button>
             ) : null}
           </div>
-          <p className="mt-2 text-xs text-muted-foreground">Or drag files here. PDF, JPG, or PNG, up to 5 pages.</p>
+          <p className="mt-3 text-[0.95rem] text-tc-muted">Or drag files here. PDF, JPG, or PNG, up to 5 pages.</p>
         </div>
 
         {/* Camera capture: on a phone this opens the rear camera directly. */}
@@ -151,32 +151,32 @@ export function UploadPanel({ demoMode }: { demoMode: boolean }) {
         />
 
         {selected.length > 0 ? (
-          <div className="mt-4 rounded-md border border-border bg-muted/40 p-3">
-            <p className="text-sm font-medium">
+          <div className="mt-5 rounded-2xl bg-tc-primary-soft p-5">
+            <p className="text-[1.05rem] font-bold text-tc-primary-ink">
               {selected.length} page{selected.length > 1 ? "s" : ""} ready
             </p>
-            <ul className="mt-1 space-y-1 text-xs text-muted-foreground">
+            <ul className="mt-2 space-y-1 text-[1rem] text-tc-ink">
               {selected.map((f, i) => (
                 <li key={`${f.name}-${i}`} className="flex items-center gap-2">
                   <span className="truncate">{f.name || `Photo ${i + 1}`}</span>
                   <button
                     type="button"
-                    className="rounded p-0.5 hover:bg-muted"
+                    className="flex size-9 shrink-0 items-center justify-center rounded-lg hover:bg-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-tc-primary/30"
                     aria-label={`Remove ${f.name || `photo ${i + 1}`}`}
                     onClick={() => setSelected((s) => s.filter((_, j) => j !== i))}
                     disabled={pending}
                   >
-                    <X className="size-3" aria-hidden />
+                    <X className="size-4" aria-hidden />
                   </button>
                 </li>
               ))}
             </ul>
-            <div className="mt-3 flex gap-2">
-              <Button type="button" size="sm" onClick={submit} disabled={pending}>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Button type="button" onClick={submit} disabled={pending}>
                 {pending ? <Loader2 className="animate-spin" aria-hidden /> : null}
                 {pending ? "Reading your document…" : "Process & review"}
               </Button>
-              <Button type="button" size="sm" variant="ghost" onClick={() => setSelected([])} disabled={pending}>
+              <Button type="button" variant="ghost" onClick={() => setSelected([])} disabled={pending}>
                 Clear
               </Button>
             </div>

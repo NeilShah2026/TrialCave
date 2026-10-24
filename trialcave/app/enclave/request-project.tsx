@@ -57,9 +57,9 @@ export function RequestProjectForm({ startOpen = false }: { startOpen?: boolean 
 
   return (
     <Card>
-      <CardContent className="space-y-4 pt-6">
-        <h2 className="text-lg font-semibold">Request a research project</h2>
-        <p className="text-sm text-muted-foreground">
+      <CardContent className="space-y-5 p-6 sm:p-8">
+        <h2 className="text-[1.45rem] font-extrabold tracking-tight">Request a research project</h2>
+        <p className="text-[1.05rem] text-tc-ink-2">
           Projects run only predefined, aggregate analyses on Donors who consented to your data
           types and research type. A TrialCave admin approves every project.
         </p>
@@ -74,24 +74,24 @@ export function RequestProjectForm({ startOpen = false }: { startOpen?: boolean 
             rows={3}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="w-full rounded-md border border-border bg-card p-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            className="w-full rounded-[14px] border-2 border-input bg-white px-3 py-3 text-[1.05rem] text-tc-ink focus-visible:border-tc-primary focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-tc-primary-soft"
           />
         </div>
         <fieldset>
-          <legend className="text-sm font-medium">Research type</legend>
-          <div className="mt-1.5 flex flex-wrap gap-2">
+          <legend className="text-[1.05rem] font-bold">Research type</legend>
+          <div className="mt-2 flex flex-wrap gap-3">
             {RESEARCH_TYPES.map((r) => (
-              <Button key={r.value} type="button" size="sm" variant={researchType === r.value ? "default" : "outline"} aria-pressed={researchType === r.value} onClick={() => setResearchType(r.value)}>
+              <Button key={r.value} type="button" variant={researchType === r.value ? "default" : "outline"} aria-pressed={researchType === r.value} onClick={() => setResearchType(r.value)}>
                 {r.label}
               </Button>
             ))}
           </div>
         </fieldset>
         <fieldset>
-          <legend className="text-sm font-medium">Data types</legend>
-          <div className="mt-1.5 flex flex-wrap gap-4">
+          <legend className="text-[1.05rem] font-bold">Data types</legend>
+          <div className="mt-2 flex flex-wrap gap-3">
             {DATA_TYPES.map((d) => (
-              <label key={d.value} className="flex items-center gap-2 text-sm">
+              <label key={d.value} className="flex min-h-12 cursor-pointer items-center gap-3 rounded-2xl bg-tc-mist px-4 text-[1.05rem]">
                 <Checkbox checked={dataTypes.includes(d.value)} onCheckedChange={() => setDataTypes((l) => toggle(l, d.value))} />
                 {d.label}
               </label>
@@ -99,25 +99,25 @@ export function RequestProjectForm({ startOpen = false }: { startOpen?: boolean 
           </div>
         </fieldset>
         <fieldset>
-          <legend className="text-sm font-medium">Analyses</legend>
-          <div className="mt-1.5 space-y-2">
+          <legend className="text-[1.05rem] font-bold">Analyses</legend>
+          <div className="mt-2 space-y-2">
             {(Object.keys(ANALYSIS_META) as AnalysisKey[]).map((k) => {
               const covered = ANALYSIS_META[k].needs.every((n) => dataTypes.includes(n));
               return (
-                <label key={k} className="flex items-center gap-2 text-sm">
+                <label key={k} className="flex min-h-12 cursor-pointer items-center gap-3 rounded-2xl bg-tc-mist px-4 py-2 text-[1.05rem]">
                   <Checkbox checked={analyses.includes(k)} onCheckedChange={() => setAnalyses((l) => toggle(l, k))} />
                   <span>
                     {ANALYSIS_META[k].label}
-                    <span className={`ml-2 text-xs ${covered ? "text-muted-foreground" : "text-tc-warning"}`}>needs {ANALYSIS_META[k].needs.join(" + ")}</span>
+                    <span className={`ml-2 text-[0.95rem] ${covered ? "text-tc-muted" : "font-semibold text-tc-warning-ink"}`}>needs {ANALYSIS_META[k].needs.join(" + ")}</span>
                   </span>
                 </label>
               );
             })}
           </div>
         </fieldset>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-3">
           <Button onClick={submit} disabled={pending}>{pending ? "Sending…" : "Send for approval"}</Button>
-          <Button variant="ghost" onClick={() => setOpen(false)} disabled={pending}>Cancel</Button>
+          <Button variant="outline" onClick={() => setOpen(false)} disabled={pending}>Cancel</Button>
         </div>
       </CardContent>
     </Card>

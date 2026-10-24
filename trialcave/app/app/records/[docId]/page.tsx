@@ -1,9 +1,10 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { format, parseISO } from "date-fns";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 import { PatientNav } from "@/components/patient-nav";
+import { PageBody, PageHero } from "@/components/page-hero";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { getMyPatient, getSessionUser } from "@/lib/auth";
@@ -87,58 +88,55 @@ export default async function ReviewPage({ params }: { params: Promise<{ docId: 
     ? `Visit or report date · ${format(parseISO(doc.document_date), "MMM d, yyyy")}`
     : `Added ${format(new Date(doc.created_at), "MMM d, yyyy")}`;
 
+  const heroTitle = doc.status === "failed" ? "We couldn't read this document" : facility;
+
   return (
     <main className="flex-1">
       <PatientNav email={user?.email ?? ""} />
-      <div className="mx-auto max-w-[800px] px-4 py-8">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <Link href="/app/records" className="inline-flex items-center gap-1 text-sm text-primary hover:underline">
-            <ArrowLeft className="size-4" aria-hidden /> Records
-          </Link>
-          <DocumentActions documentId={docId} confirmedCount={confirmedCount} hasFile={Boolean(doc.storage_path)} afterDelete="/app/records" />
-        </div>
-
+      <PageHero
+        tone="mist"
+        width="narrow"
+        back={{ href: "/app/records", label: "Records" }}
+        kicker={doc.status === "failed" ? facility : dateLabel}
+        title={heroTitle}
+        actions={<DocumentActions documentId={docId} confirmedCount={confirmedCount} hasFile={Boolean(doc.storage_path)} afterDelete="/app/records" />}
+      />
+      <PageBody width="narrow">
         {doc.status === "processing" ? (
-          <Card className="mt-4">
-            <CardContent className="flex items-center gap-3 pt-6 text-sm text-muted-foreground" role="status">
-              <Loader2 className="size-4 animate-spin" aria-hidden />
-              We&apos;re still reading this document. Refresh in a moment.
-            </CardContent>
-          </Card>
+          <div className="flex items-center gap-3 rounded-2xl bg-tc-primary-soft px-5 py-4 text-[1.05rem] font-semibold text-tc-primary-ink" role="status">
+            <Loader2 className="size-5 animate-spin" aria-hidden />
+            We&apos;re still reading this document. Refresh in a moment.
+          </div>
         ) : doc.status === "failed" ? (
-          <Card className="mt-4">
-            <CardContent className="pt-6">
-              <h1 className="text-lg font-semibold">We couldn&apos;t read this document</h1>
-              <p className="mt-1 text-sm text-muted-foreground">
+          <Card>
+            <CardContent className="pt-6 sm:pt-7">
+              <p className="rounded-2xl bg-tc-danger-soft px-5 py-4 text-[1.05rem] font-semibold text-tc-danger-ink">
                 Try a clearer photo or a PDF, or enter your results by hand.
               </p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                <Button asChild size="sm"><Link href="/app/records">Try another upload</Link></Button>
-                <Button asChild size="sm" variant="outline"><Link href="/app/profile?tab=labs">Enter results by hand</Link></Button>
+              <div className="mt-5 flex flex-wrap gap-3">
+                <Button asChild><Link href="/app/records">Try another upload</Link></Button>
+                <Button asChild variant="outline"><Link href="/app/profile?tab=labs">Enter results by hand</Link></Button>
               </div>
             </CardContent>
           </Card>
         ) : facts.length === 0 ? (
-          <Card className="mt-4">
-            <CardContent className="pt-6">
-              <h1 className="text-lg font-semibold">{facility}</h1>
-              <p className="mt-1 text-sm text-muted-foreground">
+          <Card>
+            <CardContent className="pt-6 sm:pt-7">
+              <p className="text-[1.05rem] text-tc-ink-2">
                 {doc.status === "reviewed"
                   ? `You've reviewed this document. ${confirmedCount} item${confirmedCount === 1 ? " is" : "s are"} in your profile.`
                   : "We didn't find any health items in this document."}
               </p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                <Button asChild size="sm" variant="outline"><Link href="/app/profile">See your profile</Link></Button>
-                <Button asChild size="sm" variant="outline"><Link href="/app/matches">See your matches</Link></Button>
+              <div className="mt-5 flex flex-wrap gap-3">
+                <Button asChild variant="outline"><Link href="/app/profile">See your profile</Link></Button>
+                <Button asChild variant="outline"><Link href="/app/matches">See your matches</Link></Button>
               </div>
             </CardContent>
           </Card>
         ) : (
-          <div className="mt-4">
-            <ReviewClient documentId={docId} facility={facility} dateLabel={dateLabel} facts={facts} />
-          </div>
+          <ReviewClient documentId={docId} facility={facility} dateLabel={dateLabel} facts={facts} />
         )}
-      </div>
+      </PageBody>
     </main>
   );
 }

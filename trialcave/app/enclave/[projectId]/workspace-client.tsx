@@ -1,18 +1,73 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { Download, Lock } from "lucide-react";
+import { Code2, Download, ListChecks, Loader2, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { runAnalysisAction, exportRunCsv, logBlockedRawDownload } from "../actions";
 import type { AnalysisKey, AnalysisResult } from "@/lib/enclave/analyses";
 
-export function WorkspaceClient({
+// The IDE keeps files in localStorage, so it only renders in the browser.
+const EnclaveIde = dynamic(() => import("./ide/enclave-ide").then((m) => m.EnclaveIde), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-[clamp(560px,80vh,860px)] items-center justify-center rounded-[24px] border border-[#1f4440] bg-[#0b1f1d] text-[#9fc3be]" role="status">
+      <Loader2 className="mr-2 size-5 animate-spin text-tc-mint" aria-hidden /> Starting the Enclave kernel…
+    </div>
+  ),
+});
+
+interface WorkspaceProps {
+  projectId: string;
+  projectTitle: string;
+  analyses: { key: AnalysisKey; label: string }[];
+  kMin: number;
+  poolCount: number;
+  dataTypes: string[];
+}
+
+/** Enclave workspace: a code editor plus the one-click approved analyses. */
+export function WorkspaceClient(props: WorkspaceProps) {
+  return (
+    <div className="space-y-5">
+      <div className="on-dark flex gap-4 rounded-[24px] border border-tc-night-line bg-tc-night px-6 py-5 text-white">
+        <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-tc-night-2">
+          <Lock className="size-5 text-tc-mint" aria-hidden />
+        </span>
+        <div>
+          <p className="text-[1.1rem] font-bold">You are working inside the TrialCave Enclave.</p>
+          <p className="text-[1rem] text-tc-night-text">Individual records never leave this environment. Only group results of {props.kMin}+ people can.</p>
+        </div>
+      </div>
+
+      <Tabs defaultValue="code">
+        <TabsList aria-label="Workspace mode">
+          <TabsTrigger value="code" className="gap-2">
+            <Code2 className="size-4" aria-hidden /> Code editor
+          </TabsTrigger>
+          <TabsTrigger value="quick" className="gap-2">
+            <ListChecks className="size-4" aria-hidden /> Approved analyses
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="code">
+          <EnclaveIde {...props} />
+        </TabsContent>
+        <TabsContent value="quick">
+          <QuickRun projectId={props.projectId} analyses={props.analyses} kMin={props.kMin} />
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+
+function QuickRun({
   projectId,
   analyses,
   kMin,
@@ -77,29 +132,19 @@ export function WorkspaceClient({
 
   return (
     <div className="space-y-4">
-      <Card className="border-primary bg-tc-primary-soft">
-        <CardContent className="flex gap-3 pt-6">
-          <Lock className="mt-0.5 size-5 text-primary" aria-hidden />
-          <div>
-            <p className="font-medium">You are working inside the TrialCave Enclave.</p>
-            <p className="text-sm text-muted-foreground">Individual records never leave this environment.</p>
-          </div>
-        </CardContent>
-      </Card>
-
       <Card>
-        <CardContent className="pt-6">
+        <CardContent className="p-6 sm:p-8">
           {analyses.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No analyses are approved for this project yet.</p>
+            <p className="text-[1.05rem] text-tc-ink-2">No analyses are approved for this project yet.</p>
           ) : (
             <div className="flex flex-wrap items-end gap-3">
-              <div className="space-y-1.5">
+              <div className="min-w-[16rem] flex-1 space-y-1.5 sm:max-w-[28rem]">
                 <Label htmlFor="analysis">Analysis</Label>
                 <select
                   id="analysis"
                   value={selected}
                   onChange={(e) => setSelected(e.target.value as AnalysisKey)}
-                  className="h-10 rounded-md border border-border bg-card px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  className="min-h-[3.1rem] w-full rounded-[14px] border-2 border-input bg-white px-3 text-[1.05rem] text-tc-ink focus-visible:border-tc-primary focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-tc-primary-soft"
                 >
                   {analyses.map((a) => <option key={a.key} value={a.key}>{a.label}</option>)}
                 </select>
@@ -109,48 +154,52 @@ export function WorkspaceClient({
           )}
 
           {result ? (
-            <div className="mt-6">
-              <table className="w-full text-sm">
-                <caption className="sr-only">Aggregate results</caption>
-                <thead>
-                  <tr className="border-b border-border text-left text-muted-foreground">
-                    <th scope="col" className="py-2">Group</th>
-                    <th scope="col" className="py-2">People</th>
-                    <th scope="col" className="py-2">{result.valueLabel}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {result.rows.map((r) => (
-                    <tr key={r.band} className="border-b border-border">
-                      <th scope="row" className="py-2 text-left font-normal">{r.band}</th>
-                      <td className="py-2">{r.suppressed ? `<${kMin}` : r.n}</td>
-                      <td className="py-2">{r.value != null ? r.value.toLocaleString() : "—"}</td>
+            <div className="mt-8 space-y-5">
+              <div className="overflow-x-auto rounded-2xl border border-tc-border">
+                <table className="w-full">
+                  <caption className="sr-only">Aggregate results</caption>
+                  <thead>
+                    <tr>
+                      <th scope="col" className="border-b-2 border-tc-border px-4 py-3 text-left text-[0.9rem] font-bold text-tc-muted">Group</th>
+                      <th scope="col" className="border-b-2 border-tc-border px-4 py-3 text-left text-[0.9rem] font-bold text-tc-muted">People</th>
+                      <th scope="col" className="border-b-2 border-tc-border px-4 py-3 text-left text-[0.9rem] font-bold text-tc-muted">{result.valueLabel}</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {result.rows.map((r) => (
+                      <tr key={r.band} className="[&:last-child>*]:border-0">
+                        <th scope="row" className="border-b border-tc-border px-4 py-3 text-left text-[1rem] font-semibold">{r.band}</th>
+                        <td className="border-b border-tc-border px-4 py-3 text-[1rem]">
+                          {r.suppressed ? <span className="font-semibold text-tc-warning-ink">{`<${kMin}`}</span> : r.n}
+                        </td>
+                        <td className="border-b border-tc-border px-4 py-3 text-[1rem]">{r.value != null ? r.value.toLocaleString() : "—"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
 
               {chartData.length > 0 ? (
-                <div className="mt-4 h-64" role="img" aria-label={`Bar chart of ${result.valueLabel} by group`}>
+                <div className="h-72 rounded-2xl bg-tc-mist p-4" role="img" aria-label={`Bar chart of ${result.valueLabel} by group`}>
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={chartData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#E3E6EC" />
-                      <XAxis dataKey="band" fontSize={12} />
-                      <YAxis fontSize={12} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#d6dedd" />
+                      <XAxis dataKey="band" fontSize={14} />
+                      <YAxis fontSize={14} />
                       <Tooltip />
-                      <Bar dataKey="value" fill="#2F7D7A" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="value" fill="#2F7D7A" radius={[6, 6, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
               ) : null}
 
               {result.suppressedCells > 0 ? (
-                <p className="mt-2 text-sm text-muted-foreground">
+                <p className="rounded-2xl bg-tc-warning-soft px-5 py-4 font-semibold text-tc-warning-ink">
                   {result.suppressedCells} group{result.suppressedCells > 1 ? "s" : ""} hidden (fewer than {kMin} people).
                 </p>
               ) : null}
 
-              <div className="mt-4 flex flex-wrap items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <Button variant="outline" onClick={exportCsv} disabled={pending || !runId}>
                   <Download aria-hidden /> Export results (CSV)
                 </Button>
@@ -164,17 +213,17 @@ export function WorkspaceClient({
                   }}
                   title="Raw records never leave the Enclave"
                   aria-label="Download raw records (disabled). Raw records never leave the Enclave."
-                  className="inline-block cursor-not-allowed rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  className="inline-block cursor-not-allowed rounded-[14px] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-tc-primary-soft"
                 >
                   <Button variant="ghost" disabled tabIndex={-1} className="pointer-events-none">
                     Download raw records
                   </Button>
                 </span>
-                <span className="text-xs text-muted-foreground">Raw records never leave the Enclave.</span>
+                <span className="text-[0.95rem] text-tc-muted">Raw records never leave the Enclave.</span>
               </div>
             </div>
           ) : analyses.length > 0 ? (
-            <p className="mt-4 text-sm text-muted-foreground">Pick an analysis and run it to see aggregate results.</p>
+            <p className="mt-6 rounded-2xl bg-tc-mist p-5 text-[1.05rem] text-tc-ink-2">Pick an analysis and run it to see aggregate results.</p>
           ) : null}
         </CardContent>
       </Card>

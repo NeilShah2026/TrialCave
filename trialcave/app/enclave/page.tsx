@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { PageBody, PageHero } from "@/components/page-hero";
 import { ResearcherNav } from "@/components/researcher-nav";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -28,58 +29,61 @@ export default async function EnclaveHome() {
   return (
     <main className="flex-1">
       <ResearcherNav email={user?.email ?? ""} orgName={partner.orgName} />
-      <div className="mx-auto max-w-[1100px] px-4 py-8">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-semibold">Your projects</h1>
-            <p className="mt-1 text-muted-foreground">
-              Run approved analyses inside the Enclave. Only aggregate results leave.
-            </p>
-          </div>
-          {projects && projects.length > 0 ? <RequestProjectForm /> : null}
-        </div>
-
+      <PageHero
+        tone="night"
+        kicker={partner.orgName}
+        title="Your projects"
+        lede="Run approved analyses inside the Enclave. Only aggregate results leave."
+      />
+      <PageBody width="wide">
         {!partner.verified ? (
-          <p className="mt-3 rounded-md bg-tc-secondary-soft px-3 py-2 text-sm">
+          <p className="mb-6 rounded-2xl bg-tc-warning-soft px-5 py-4 font-semibold text-tc-warning-ink">
             Your organization is pending verification. You can request projects now.
           </p>
         ) : null}
 
         {!projects || projects.length === 0 ? (
-          <div className="mt-6 space-y-4">
-            <div className="rounded-2xl border border-dashed border-border bg-card p-8 text-center text-muted-foreground">
+          <div className="space-y-6">
+            <Card className="border-2 border-dashed border-tc-border p-10 text-center text-[1.1rem] text-tc-ink-2 shadow-none">
               No projects yet. Request one to get started.
-            </div>
+            </Card>
             <RequestProjectForm startOpen />
           </div>
         ) : (
-          <div className="mt-6 grid gap-4 sm:grid-cols-2">
-            {projects.map((p) => (
-              <Card key={p.id}>
-                <CardContent className="pt-6">
-                  <div className="flex items-start justify-between gap-2">
-                    <h2 className="font-semibold">{p.title}</h2>
-                    <Badge variant={p.status === "approved" ? "success" : p.status === "pending" ? "warning" : "muted"}>{STATUS_TEXT[p.status] ?? p.status}</Badge>
-                  </div>
-                  <p className="mt-1 text-sm text-muted-foreground">{p.description}</p>
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    <span className="capitalize">{p.research_type}</span> · {(p.data_types ?? []).join(", ")} · {formatCents(p.access_fee_per_run_cents)} per run
-                  </p>
-                  {p.status === "approved" ? (
-                    <Button asChild size="sm" className="mt-3">
-                      <Link href={`/enclave/${p.id}`}>Open workspace</Link>
-                    </Button>
-                  ) : (
-                    <p className="mt-3 text-sm text-muted-foreground">
-                      {p.status === "pending" ? "Awaiting TrialCave approval." : "This project wasn't approved."}
+          <>
+            <div className="mb-6">
+              <RequestProjectForm />
+            </div>
+            <div className="grid gap-5 md:grid-cols-2">
+              {projects.map((p) => (
+                <Card key={p.id} className="flex flex-col">
+                  <CardContent className="flex flex-1 flex-col p-6 sm:p-7">
+                    <div className="flex items-start justify-between gap-3">
+                      <h2 className="text-[1.15rem] font-bold text-tc-ink">{p.title}</h2>
+                      <Badge variant={p.status === "approved" ? "success" : p.status === "pending" ? "warning" : "muted"}>{STATUS_TEXT[p.status] ?? p.status}</Badge>
+                    </div>
+                    <p className="mt-2 text-[1.05rem] text-tc-ink-2">{p.description}</p>
+                    <p className="mt-4 rounded-2xl bg-tc-mist px-4 py-3 text-[0.95rem] text-tc-ink-2">
+                      <span className="font-bold capitalize text-tc-ink">{p.research_type}</span> · {(p.data_types ?? []).join(", ")} · {formatCents(p.access_fee_per_run_cents)} per run
                     </p>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                    <div className="mt-auto pt-5">
+                      {p.status === "approved" ? (
+                        <Button asChild variant="night">
+                          <Link href={`/enclave/${p.id}`}>Open workspace</Link>
+                        </Button>
+                      ) : (
+                        <p className="text-[1rem] font-semibold text-tc-muted">
+                          {p.status === "pending" ? "Awaiting TrialCave approval." : "This project wasn't approved."}
+                        </p>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </>
         )}
-      </div>
+      </PageBody>
     </main>
   );
 }

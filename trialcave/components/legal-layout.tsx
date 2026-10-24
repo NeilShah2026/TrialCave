@@ -1,7 +1,9 @@
 import Link from "next/link";
 
-import { PublicHeader } from "@/components/public-header";
+import { PageBody, PageHero } from "@/components/page-hero";
+import { SiteHeader } from "@/components/site-header";
 import { CONSENT_VERSION } from "@/lib/env";
+import { cn } from "@/lib/utils";
 
 export const LEGAL_DOCS = [
   { href: "/legal/privacy", label: "Privacy Notice" },
@@ -17,6 +19,16 @@ export interface LegalSection {
   body: React.ReactNode;
 }
 
+/** Readable prose styling for legal section bodies. */
+const PROSE = cn(
+  "mt-3 space-y-4 text-[1.05rem] leading-relaxed text-tc-ink-2",
+  "[&_strong]:font-bold [&_strong]:text-tc-ink",
+  "[&_ul]:list-disc [&_ul]:space-y-2 [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:space-y-2 [&_ol]:pl-6",
+  "[&_li]:pl-1 [&_li]:marker:text-tc-primary",
+  "[&_a]:font-bold [&_a]:text-tc-primary-ink [&_a]:underline [&_a]:underline-offset-4",
+  "[&_table]:text-[1rem] [&_th]:font-bold [&_th]:text-tc-ink [&_td]:align-top",
+);
+
 /** Shared layout for /legal/* (C4): version line, contents, sections, doc nav. */
 export function LegalLayout({
   title,
@@ -31,63 +43,74 @@ export function LegalLayout({
 }) {
   return (
     <main className="flex-1">
-      <PublicHeader />
-      <div className="mx-auto grid max-w-[1100px] gap-8 px-4 py-10 md:grid-cols-[220px_1fr]">
-        <aside className="md:sticky md:top-6 md:self-start">
-          <nav aria-label="Legal documents" className="space-y-1 text-sm">
-            <p className="mb-2 font-semibold">Legal</p>
-            {LEGAL_DOCS.map((d) => (
-              <Link
-                key={d.href}
-                href={d.href}
-                aria-current={d.href === current ? "page" : undefined}
-                className={
-                  d.href === current
-                    ? "block rounded-md bg-tc-primary-soft px-2 py-1 font-medium text-tc-primary"
-                    : "block rounded-md px-2 py-1 text-muted-foreground hover:bg-muted hover:text-foreground"
-                }
-              >
-                {d.label}
-              </Link>
-            ))}
-          </nav>
-        </aside>
-
-        <article className="max-w-[720px] text-sm leading-relaxed">
-          <h1 className="text-3xl font-semibold">{title}</h1>
-          <p className="mt-2 text-muted-foreground">
-            Version {CONSENT_VERSION}. Demo text for the Hackachusetts 2026 build. Not reviewed by a lawyer.
-          </p>
-          <p className="mt-4 rounded-xl bg-tc-primary-soft p-4 text-foreground">{summary}</p>
-
-          <nav aria-label="On this page" className="mt-6 rounded-xl border border-border p-4">
-            <p className="font-semibold">On this page</p>
-            <ol className="mt-2 list-inside list-decimal space-y-1 text-muted-foreground">
-              {sections.map((s) => (
-                <li key={s.id}>
-                  <a href={`#${s.id}`} className="hover:text-primary hover:underline">{s.title}</a>
-                </li>
+      <SiteHeader />
+      <PageHero
+        tone="mist"
+        width="narrow"
+        back={{ href: "/legal", label: "All legal documents" }}
+        title={title}
+        lede={`Version ${CONSENT_VERSION}. Demo text for the Hackachusetts 2026 build. Not reviewed by a lawyer.`}
+      />
+      <PageBody width="narrow">
+        <div className="grid gap-10 md:grid-cols-[220px_minmax(0,1fr)]">
+          <aside className="md:sticky md:top-24 md:self-start">
+            <nav aria-label="Legal documents" className="space-y-1">
+              <p className="mb-3 text-[1rem] font-bold text-tc-muted">Legal</p>
+              {LEGAL_DOCS.map((d) => (
+                <Link
+                  key={d.href}
+                  href={d.href}
+                  aria-current={d.href === current ? "page" : undefined}
+                  className={cn(
+                    "flex min-h-11 items-center rounded-xl px-3 py-2 text-[1rem]",
+                    d.href === current
+                      ? "bg-tc-primary-soft font-bold text-tc-primary-ink"
+                      : "font-semibold text-tc-ink-2 hover:bg-tc-mist hover:text-tc-ink",
+                  )}
+                >
+                  {d.label}
+                </Link>
               ))}
-            </ol>
-          </nav>
+            </nav>
+          </aside>
 
-          {sections.map((s, i) => (
-            <section key={s.id} id={s.id} className="mt-8 scroll-mt-6">
-              <h2 className="text-lg font-semibold">
-                {i + 1}. {s.title}
-              </h2>
-              <div className="mt-2 space-y-2 text-muted-foreground [&_strong]:text-foreground [&_ul]:list-disc [&_ul]:space-y-1 [&_ul]:pl-5">
-                {s.body}
-              </div>
-            </section>
-          ))}
+          <article className="min-w-0 max-w-[720px]">
+            <p className="rounded-2xl bg-tc-primary-soft px-5 py-4 text-[1.1rem] font-semibold leading-relaxed text-tc-ink">
+              {summary}
+            </p>
 
-          <p className="mt-10 border-t border-border pt-4 text-xs text-muted-foreground">
-            Questions about this document? Email privacy@trialcave.example (demo address). TrialCave
-            does not provide medical advice. The study team always makes the final eligibility decision.
-          </p>
-        </article>
-      </div>
+            <nav aria-label="On this page" className="mt-8 rounded-2xl border-2 border-tc-border p-5">
+              <p className="text-[1.15rem] font-bold">On this page</p>
+              <ol className="mt-3 list-decimal space-y-2 pl-6 text-[1.05rem] text-tc-ink-2 marker:text-tc-muted">
+                {sections.map((s) => (
+                  <li key={s.id} className="pl-1">
+                    <a
+                      href={`#${s.id}`}
+                      className="font-semibold text-tc-primary-ink underline-offset-4 hover:underline"
+                    >
+                      {s.title}
+                    </a>
+                  </li>
+                ))}
+              </ol>
+            </nav>
+
+            {sections.map((s, i) => (
+              <section key={s.id} id={s.id} className="mt-10 scroll-mt-24">
+                <h2 className="text-[1.35rem] font-extrabold tracking-[-0.01em] text-tc-ink">
+                  {i + 1}. {s.title}
+                </h2>
+                <div className={PROSE}>{s.body}</div>
+              </section>
+            ))}
+
+            <p className="mt-12 border-t border-tc-border pt-5 text-[0.95rem] text-tc-muted">
+              Questions about this document? Email privacy@trialcave.example (demo address). TrialCave
+              does not provide medical advice. The study team always makes the final eligibility decision.
+            </p>
+          </article>
+        </div>
+      </PageBody>
     </main>
   );
 }

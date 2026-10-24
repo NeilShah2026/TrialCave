@@ -32,16 +32,16 @@ export function StudyStatusButton({ trialId, status }: { trialId: string; status
 
   if (next === "closed" && confirming) {
     return (
-      <span role="alertdialog" aria-label="Close this study?" className="flex flex-wrap items-center gap-2 text-sm">
+      <span role="alertdialog" aria-label="Close this study?" className="flex flex-wrap items-center gap-3 rounded-2xl bg-white p-4 text-[1.05rem] font-bold text-tc-ink shadow-pop">
         Close to new participants?
         <Button size="sm" variant="destructive" onClick={run} disabled={pending}>{pending ? "Closing…" : "Close study"}</Button>
-        <Button size="sm" variant="ghost" onClick={() => setConfirming(false)} disabled={pending}>Cancel</Button>
+        <Button size="sm" variant="outline" onClick={() => setConfirming(false)} disabled={pending}>Cancel</Button>
       </span>
     );
   }
 
   return (
-    <Button size="sm" variant="outline" disabled={pending} onClick={() => (next === "closed" ? setConfirming(true) : run())}>
+    <Button variant="outline" disabled={pending} onClick={() => (next === "closed" ? setConfirming(true) : run())}>
       {next === "closed" ? "Close study" : pending ? "Reopening…" : "Reopen study"}
     </Button>
   );

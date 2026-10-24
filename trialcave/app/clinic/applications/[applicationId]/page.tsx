@@ -1,10 +1,9 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { format } from "date-fns";
-import { ArrowLeft } from "lucide-react";
 
 import { ClinicNav } from "@/components/clinic-nav";
 import { ContactReportView } from "@/components/contact-report";
+import { PageBody, PageHero } from "@/components/page-hero";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { getMyClinic, getSessionUser } from "@/lib/auth";
@@ -40,33 +39,33 @@ export default async function ApplicationPage({ params }: { params: Promise<{ ap
   return (
     <main className="flex-1">
       <ClinicNav email={user?.email ?? ""} clinicName={clinic.name} />
-      <div className="mx-auto max-w-[800px] px-4 py-8">
-        <Link href={`/clinic/studies/${app.trial_id}?tab=applications`} className="inline-flex items-center gap-1 text-sm text-primary hover:underline">
-          <ArrowLeft className="size-4" aria-hidden /> {trial?.title ?? "Study"}
-        </Link>
-        <div className="mt-3 flex flex-wrap items-center gap-3">
-          <h1 className="text-2xl font-semibold">Application</h1>
-          <Badge variant={withdrawn ? "muted" : "secondary"}>{APPLICATION_STATUS_LABEL[app.status] ?? app.status}</Badge>
-        </div>
-        <p className="text-sm text-muted-foreground">Received {format(new Date(app.created_at), "MMM d, yyyy")}</p>
-
+      <PageHero
+        tone="mist"
+        width="narrow"
+        back={{ href: `/clinic/studies/${app.trial_id}?tab=applications`, label: trial?.title ?? "Study" }}
+        title="Application"
+        actions={<Badge variant={withdrawn ? "muted" : "secondary"} className="px-4 py-2 text-[0.95rem]">{APPLICATION_STATUS_LABEL[app.status] ?? app.status}</Badge>}
+        lede={`Received ${format(new Date(app.created_at), "MMM d, yyyy")}`}
+      />
+      <PageBody width="narrow" className="pt-0">
         {withdrawn || !report ? (
-          <Card className="mt-4">
-            <CardContent className="pt-6 text-sm text-muted-foreground">
+          <Card>
+            <CardContent className="p-6 text-[1.05rem] text-tc-ink-2 sm:p-8">
               The participant withdrew this application. Their shared details are no longer available.
             </CardContent>
           </Card>
         ) : (
-          <>
-            <div className="mt-4">
-              <ContactReportView report={report} />
-            </div>
-            <div className="mt-4">
-              <ApplicationActions applicationId={applicationId} current={app.status} />
-            </div>
-          </>
+          <div className="space-y-6">
+            <ContactReportView report={report} />
+            <Card>
+              <CardContent className="p-6 sm:p-7">
+                <h2 className="mb-4 text-[1.15rem] font-bold">Update status</h2>
+                <ApplicationActions applicationId={applicationId} current={app.status} />
+              </CardContent>
+            </Card>
+          </div>
         )}
-      </div>
+      </PageBody>
     </main>
   );
 }

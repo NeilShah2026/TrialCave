@@ -23,23 +23,23 @@ export function ConsentTable({
   disabled?: boolean;
 }) {
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full min-w-[420px] text-sm">
+    <div className="overflow-x-auto rounded-2xl border-2 border-tc-border">
+      <table className="w-full min-w-[420px] text-[1rem] text-tc-ink">
         <caption className="sr-only">Which research each kind of data may support</caption>
         <thead>
-          <tr className="border-b border-border">
-            <th scope="col" className="p-2 text-left font-medium">Data</th>
+          <tr className="bg-tc-mist">
+            <th scope="col" className="px-4 py-3 text-left font-bold">Data</th>
             {RESEARCH_TYPES.map((r) => (
-              <th key={r.value} scope="col" className="p-2 text-center font-medium">{r.label}</th>
+              <th key={r.value} scope="col" className="px-3 py-3 text-center font-bold">{r.label}</th>
             ))}
           </tr>
         </thead>
         <tbody>
           {DATA_TYPES.map((d) => (
-            <tr key={d.value} className="border-b border-border last:border-0">
-              <th scope="row" className="p-2 text-left font-normal">{d.label}</th>
+            <tr key={d.value} className="border-t border-tc-border">
+              <th scope="row" className="px-4 py-3 text-left font-semibold">{d.label}</th>
               {RESEARCH_TYPES.map((r) => (
-                <td key={r.value} className="p-2 text-center">
+                <td key={r.value} className="px-3 py-3 text-center">
                   <Checkbox
                     checked={Boolean(grid[key(d.value, r.value)])}
                     onCheckedChange={() => onToggle(d.value, r.value)}
@@ -87,9 +87,9 @@ export function ConsentGrid({ initial }: { initial: ConsentCell[] }) {
 
   return (
     <Card>
-      <CardContent className="pt-6">
-        <h2 className="text-lg font-semibold">What you allow</h2>
-        <p className="text-sm text-muted-foreground">
+      <CardContent className="pt-6 sm:pt-7">
+        <h2 className="text-[1.45rem] font-extrabold tracking-tight">What you allow</h2>
+        <p className="mt-1 text-[1.05rem] text-tc-ink-2">
           Choose which research your donation supports. Changes apply to future analyses only.
         </p>
         <div className="mt-4">

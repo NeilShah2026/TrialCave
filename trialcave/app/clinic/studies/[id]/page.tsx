@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { format } from "date-fns";
-import { ArrowLeft } from "lucide-react";
 
 import { ClinicNav } from "@/components/clinic-nav";
+import { PageBody, PageHero } from "@/components/page-hero";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getMyClinic, getSessionUser, assertClinicOwnsTrial } from "@/lib/auth";
@@ -63,28 +64,39 @@ export default async function StudyPage({
   const withdrawnApps = (applications ?? []).length - activeApps.length;
   const active = trial.study_status === "active";
 
+  const stats: [string, number][] = [
+    ["Invitations sent", invitations.length],
+    ["Approved contacts", approved.length],
+    ["Applications", activeApps.length],
+  ];
+
   return (
     <main className="flex-1">
       <ClinicNav email={user?.email ?? ""} clinicName={clinic.name} />
-      <div className="mx-auto max-w-[900px] px-4 py-8">
-        <Link href="/clinic" className="inline-flex items-center gap-1 text-sm text-primary hover:underline">
-          <ArrowLeft className="size-4" aria-hidden /> Studies
-        </Link>
-        <div className="mt-3 flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-semibold">{trial.title}</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {categoryLabel(trial.condition_category)}
-              {trial.irb_protocol_number ? ` · IRB ${trial.irb_protocol_number}` : ""}
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Badge variant={active ? "success" : "muted"}>{STUDY_STATUS_LABEL[trial.study_status] ?? trial.study_status}</Badge>
+      <PageHero
+        tone="indigo"
+        back={{ href: "/clinic", label: "Studies" }}
+        kicker={`${categoryLabel(trial.condition_category)}${trial.irb_protocol_number ? ` · IRB ${trial.irb_protocol_number}` : ""}`}
+        title={trial.title}
+        actions={
+          <>
+            <Badge variant={active ? "success" : "muted"} className="px-4 py-2 text-[0.95rem]">{STUDY_STATUS_LABEL[trial.study_status] ?? trial.study_status}</Badge>
             <StudyStatusButton trialId={id} status={trial.study_status} />
-          </div>
-        </div>
+          </>
+        }
+      >
+        <dl className="grid gap-4 sm:grid-cols-3">
+          {stats.map(([label, n]) => (
+            <div key={label} className="flex flex-col-reverse rounded-[24px] bg-white p-5 shadow-card">
+              <dt className="mt-2 text-[1rem] font-bold text-tc-ink-2">{label}</dt>
+              <dd className="text-[2.4rem] font-extrabold leading-none tracking-tight text-tc-secondary">{n}</dd>
+            </div>
+          ))}
+        </dl>
+      </PageHero>
 
-        <Tabs defaultValue={tab && TABS.has(tab) ? tab : "find"} className="mt-6">
+      <PageBody width="wide">
+        <Tabs defaultValue={tab && TABS.has(tab) ? tab : "find"}>
           <TabsList className="h-auto flex-wrap">
             <TabsTrigger value="find">Find participants</TabsTrigger>
             <TabsTrigger value="equity">Equitable reach</TabsTrigger>
@@ -94,7 +106,7 @@ export default async function StudyPage({
             <TabsTrigger value="applications">Applications ({activeApps.length})</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="find">
+          <TabsContent value="find" className="mt-6">
             <FindParticipants
               trialId={id}
               verified={clinic.verified}
@@ -105,83 +117,99 @@ export default async function StudyPage({
             />
           </TabsContent>
 
-          <TabsContent value="equity">
+          <TabsContent value="equity" className="mt-6">
             <EquitySummaryView summary={equity} />
           </TabsContent>
 
-          <TabsContent value="overview">
+          <TabsContent value="overview" className="mt-6">
             <Card>
-              <CardContent className="pt-6">
-                {trial.plain_summary ? <p className="text-sm">{trial.plain_summary}</p> : <p className="text-sm text-muted-foreground">No summary yet.</p>}
-                {trial.what_is_involved ? <p className="mt-2 text-sm text-muted-foreground">{trial.what_is_involved}</p> : null}
-                <p className="mt-2 text-xs text-muted-foreground">
+              <CardContent className="space-y-5 p-6 sm:p-8">
+                <div className="space-y-2">
+                  {trial.plain_summary ? (
+                    <p className="text-[1.1rem] leading-relaxed text-tc-ink">{trial.plain_summary}</p>
+                  ) : (
+                    <p className="text-tc-ink-2">No summary yet.</p>
+                  )}
+                  {trial.what_is_involved ? <p className="text-[1.05rem] text-tc-ink-2">{trial.what_is_involved}</p> : null}
+                </div>
+                <p className="inline-flex rounded-2xl bg-tc-mist px-4 py-2 text-[0.95rem] font-semibold text-tc-ink-2">
                   Ages {trial.min_age_years ?? "any"}–{trial.max_age_years ?? "any"} · {trial.sex === "ALL" || !trial.sex ? "All sexes" : trial.sex.toLowerCase()}
                 </p>
-                <h2 className="mt-4 text-sm font-semibold">Checklist</h2>
-                {(criteria ?? []).length === 0 ? (
-                  <p className="mt-1 text-sm text-muted-foreground">No criteria saved.</p>
-                ) : (
-                  <ul className="mt-2 space-y-2 text-sm">
-                    {(criteria ?? []).map((c, i) => (
-                      <li key={i} className="flex gap-2">
-                        <Badge variant={c.kind === "inclusion" ? "success" : "danger"} className="h-fit shrink-0">
-                          {c.kind === "inclusion" ? "Needed" : "Rules out"}
-                        </Badge>
-                        <span>
-                          {c.plain_text}
-                          {c.machine_checkable ? <span className="ml-2 text-xs text-muted-foreground">(checked automatically)</span> : c.patient_question ? <span className="ml-2 text-xs text-muted-foreground">(asked as a question)</span> : null}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
+                <div>
+                  <h2 className="text-[1.45rem] font-extrabold tracking-tight">Checklist</h2>
+                  {(criteria ?? []).length === 0 ? (
+                    <p className="mt-2 text-tc-ink-2">No criteria saved.</p>
+                  ) : (
+                    <ul className="mt-3 space-y-3">
+                      {(criteria ?? []).map((c, i) => (
+                        <li key={i} className="flex gap-3 rounded-2xl bg-tc-mist p-4 text-[1.05rem]">
+                          <Badge variant={c.kind === "inclusion" ? "success" : "danger"} className="h-fit shrink-0">
+                            {c.kind === "inclusion" ? "Needed" : "Rules out"}
+                          </Badge>
+                          <span className="text-tc-ink">
+                            {c.plain_text}
+                            {c.machine_checkable ? (
+                              <span className="ml-2 text-[0.95rem] text-tc-muted">(checked automatically)</span>
+                            ) : c.patient_question ? (
+                              <span className="ml-2 text-[0.95rem] text-tc-muted">(asked as a question)</span>
+                            ) : null}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
                 {trial.invite_message ? (
-                  <>
-                    <h2 className="mt-4 text-sm font-semibold">Invitation text</h2>
-                    <p className="mt-1 text-sm italic text-muted-foreground">&ldquo;{trial.invite_message}&rdquo;</p>
-                  </>
+                  <div>
+                    <h2 className="text-[1.45rem] font-extrabold tracking-tight">Invitation text</h2>
+                    <blockquote className="mt-3 rounded-2xl border-l-4 border-tc-secondary bg-tc-secondary-soft px-5 py-4 text-[1.05rem] italic text-tc-ink">
+                      &ldquo;{trial.invite_message}&rdquo;
+                    </blockquote>
+                  </div>
                 ) : null}
               </CardContent>
             </Card>
           </TabsContent>
 
-          <TabsContent value="invitations">
+          <TabsContent value="invitations" className="mt-6">
             <Card>
-              <CardContent className="pt-6">
+              <CardContent className="p-6 sm:p-8">
                 <h2 className="sr-only">Invitation counts</h2>
-                <dl className="grid gap-2 text-sm sm:grid-cols-2">
-                  <div className="flex justify-between rounded-md border border-border px-3 py-2">
-                    <dt>Sent</dt>
-                    <dd className="font-medium">{invitations.length}</dd>
+                <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  <div className="flex flex-col-reverse rounded-2xl bg-tc-mist p-5">
+                    <dt className="mt-2 font-bold text-tc-ink-2">Sent</dt>
+                    <dd className="text-[2.4rem] font-extrabold leading-none tracking-tight text-tc-secondary">{invitations.length}</dd>
                   </div>
                   {INV_STATUSES.map((s) => (
-                    <div key={s} className="flex justify-between rounded-md border border-border px-3 py-2">
-                      <dt>{INVITATION_STATUS_LABEL[s]}</dt>
-                      <dd className="font-medium">{invCounts[s]}</dd>
+                    <div key={s} className="flex flex-col-reverse rounded-2xl bg-tc-mist p-5">
+                      <dt className="mt-2 font-bold text-tc-ink-2">{INVITATION_STATUS_LABEL[s]}</dt>
+                      <dd className="text-[2.4rem] font-extrabold leading-none tracking-tight text-tc-secondary">{invCounts[s]}</dd>
                     </div>
                   ))}
                 </dl>
-                <p className="mt-3 text-xs text-muted-foreground">Counts only. Declines are never identified.</p>
+                <p className="mt-4 text-[0.95rem] text-tc-muted">Counts only. Declines are never identified.</p>
               </CardContent>
             </Card>
           </TabsContent>
 
-          <TabsContent value="contacts">
+          <TabsContent value="contacts" className="mt-6">
             <Card>
-              <CardContent className="pt-6">
+              <CardContent className="p-6 sm:p-8">
                 {approved.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No approved contacts yet. When someone approves your invitation, they&apos;ll appear here.</p>
+                  <p className="text-[1.05rem] text-tc-ink-2">No approved contacts yet. When someone approves your invitation, they&apos;ll appear here.</p>
                 ) : (
-                  <ul className="divide-y divide-border">
+                  <ul className="divide-y divide-tc-border">
                     {approved.map((a) => (
-                      <li key={a.id} className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm">
-                        <span>
-                          Participant #C-{a.id.slice(0, 6)}
-                          <span className="ml-2 text-xs text-muted-foreground">
+                      <li key={a.id} className="flex flex-wrap items-center justify-between gap-3 py-4">
+                        <span className="text-[1.05rem]">
+                          <span className="font-bold text-tc-ink">Participant #C-{a.id.slice(0, 6)}</span>
+                          <span className="ml-3 text-[0.95rem] text-tc-muted">
                             {a.responded_at ? `Approved ${format(new Date(a.responded_at), "MMM d")}` : ""} · shared {a.shared_fields?.length ?? 0} fields
                           </span>
                         </span>
-                        <Link href={`/clinic/contacts/${a.id}`} className="text-primary hover:underline">View report</Link>
+                        <Button asChild variant="outline" size="sm">
+                          <Link href={`/clinic/contacts/${a.id}`}>View report</Link>
+                        </Button>
                       </li>
                     ))}
                   </ul>
@@ -190,33 +218,35 @@ export default async function StudyPage({
             </Card>
           </TabsContent>
 
-          <TabsContent value="applications">
+          <TabsContent value="applications" className="mt-6">
             <Card>
-              <CardContent className="pt-6">
+              <CardContent className="p-6 sm:p-8">
                 {activeApps.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No applications yet. Patients who match can apply from their TrialCave account.</p>
+                  <p className="text-[1.05rem] text-tc-ink-2">No applications yet. Patients who match can apply from their TrialCave account.</p>
                 ) : (
-                  <ul className="divide-y divide-border">
+                  <ul className="divide-y divide-tc-border">
                     {activeApps.map((a) => (
-                      <li key={a.id} className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm">
-                        <span>
-                          Participant #A-{a.id.slice(0, 6)}
-                          <Badge variant="secondary" className="ml-2">{APPLICATION_STATUS_LABEL[a.status] ?? a.status}</Badge>
-                          <span className="ml-2 text-xs text-muted-foreground">{format(new Date(a.created_at), "MMM d")}</span>
+                      <li key={a.id} className="flex flex-wrap items-center justify-between gap-3 py-4">
+                        <span className="flex flex-wrap items-center gap-3 text-[1.05rem]">
+                          <span className="font-bold text-tc-ink">Participant #A-{a.id.slice(0, 6)}</span>
+                          <Badge variant="secondary">{APPLICATION_STATUS_LABEL[a.status] ?? a.status}</Badge>
+                          <span className="text-[0.95rem] text-tc-muted">{format(new Date(a.created_at), "MMM d")}</span>
                         </span>
-                        <Link href={`/clinic/applications/${a.id}`} className="text-primary hover:underline">Review</Link>
+                        <Button asChild variant="secondary" size="sm">
+                          <Link href={`/clinic/applications/${a.id}`}>Review</Link>
+                        </Button>
                       </li>
                     ))}
                   </ul>
                 )}
                 {withdrawnApps > 0 ? (
-                  <p className="mt-3 text-xs text-muted-foreground">{withdrawnApps} application{withdrawnApps === 1 ? " was" : "s were"} withdrawn by the participant.</p>
+                  <p className="mt-4 text-[0.95rem] text-tc-muted">{withdrawnApps} application{withdrawnApps === 1 ? " was" : "s were"} withdrawn by the participant.</p>
                 ) : null}
               </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
-      </div>
+      </PageBody>
     </main>
   );
 }

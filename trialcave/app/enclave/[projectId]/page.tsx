@@ -1,10 +1,9 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { format } from "date-fns";
-import { ArrowLeft } from "lucide-react";
 
+import { PageBody, PageHero } from "@/components/page-hero";
 import { ResearcherNav } from "@/components/researcher-nav";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { getMyResearchPartner, getSessionUser, assertApprovedProjectOwner } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { eligibleDonorPool, ANALYSIS_META } from "@/lib/enclave/run";
@@ -48,48 +47,72 @@ export default async function WorkspacePage({ params }: { params: Promise<{ proj
   return (
     <main className="flex-1">
       <ResearcherNav email={user?.email ?? ""} orgName={partner.orgName} />
-      <div className="mx-auto max-w-[800px] px-4 py-8">
-        <Link href="/enclave" className="inline-flex items-center gap-1 text-sm text-primary hover:underline">
-          <ArrowLeft className="size-4" aria-hidden /> Projects
-        </Link>
-        <h1 className="mt-3 text-2xl font-semibold">{project.title}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Eligible Donor pool: {pool.count}</p>
+      <PageHero tone="night" back={{ href: "/enclave", label: "Projects" }} kicker="Enclave workspace" title={project.title}>
+        <dl className="flex flex-wrap gap-3">
+          {[
+            { label: "Eligible Donor pool", value: String(pool.count) },
+            { label: "Approved analyses", value: String(analyses.length) },
+            { label: "Smallest group shown", value: `${K_MIN}+` },
+            { label: "Rows that can leave", value: "0" },
+          ].map((s) => (
+            <div key={s.label} className="flex min-w-[10.5rem] flex-col-reverse rounded-[20px] border border-tc-night-line bg-tc-night-2/80 px-5 py-4 backdrop-blur">
+              <dt className="mt-2 text-[0.95rem] font-bold text-tc-night-text">{s.label}</dt>
+              <dd className="text-[2.1rem] font-extrabold leading-none tracking-tight text-tc-mint">{s.value}</dd>
+            </div>
+          ))}
+        </dl>
+        {(project.data_types as string[] | null)?.length ? (
+          <p className="mt-4 flex flex-wrap items-center gap-2 text-[0.95rem] text-tc-night-text">
+            Data in this project:
+            {(project.data_types as string[]).map((d) => (
+              <span key={d} className="rounded-full bg-tc-night-2 px-3 py-1 text-[0.85rem] font-bold capitalize text-tc-mint">
+                {d}
+              </span>
+            ))}
+          </p>
+        ) : null}
+      </PageHero>
+      <PageBody width="wide" className="space-y-6">
+        <WorkspaceClient
+          projectId={projectId}
+          projectTitle={project.title}
+          analyses={analyses}
+          kMin={K_MIN}
+          poolCount={pool.count}
+          dataTypes={(project.data_types as string[] | null) ?? []}
+        />
 
-        <div className="mt-6">
-          <WorkspaceClient projectId={projectId} analyses={analyses} kMin={K_MIN} />
-        </div>
-
-        <Card className="mt-6">
-          <CardContent className="pt-6">
-            <h2 className="text-lg font-semibold">Run history</h2>
-            {runs && runs.length > 0 ? (
-              <table className="mt-2 w-full text-sm">
+        <div>
+          <h2 className="mb-4 text-[1.45rem] font-extrabold tracking-tight">Run history</h2>
+          {runs && runs.length > 0 ? (
+            <Card className="overflow-x-auto">
+              <table className="w-full">
                 <caption className="sr-only">Recent runs</caption>
                 <thead>
-                  <tr className="border-b border-border text-left text-muted-foreground">
-                    <th scope="col" className="py-2">When</th>
-                    <th scope="col" className="py-2">Analysis</th>
-                    <th scope="col" className="py-2">Donors included</th>
-                    <th scope="col" className="py-2">Hidden groups</th>
+                  <tr>
+                    <th scope="col" className="border-b-2 border-tc-border px-4 py-3 text-left text-[0.9rem] font-bold text-tc-muted">When</th>
+                    <th scope="col" className="border-b-2 border-tc-border px-4 py-3 text-left text-[0.9rem] font-bold text-tc-muted">Analysis</th>
+                    <th scope="col" className="border-b-2 border-tc-border px-4 py-3 text-left text-[0.9rem] font-bold text-tc-muted">Donors included</th>
+                    <th scope="col" className="border-b-2 border-tc-border px-4 py-3 text-left text-[0.9rem] font-bold text-tc-muted">Hidden groups</th>
                   </tr>
                 </thead>
                 <tbody>
                   {runs.map((r) => (
-                    <tr key={r.id} className="border-b border-border last:border-0">
-                      <td className="py-2">{format(new Date(r.created_at), "MMM d, h:mm a")}</td>
-                      <td className="py-2">{ANALYSIS_META[r.analysis_key as AnalysisKey]?.label ?? r.analysis_key}</td>
-                      <td className="py-2">{r.donor_count}</td>
-                      <td className="py-2">{r.suppressed_cells}</td>
+                    <tr key={r.id} className="[&:last-child>td]:border-0">
+                      <td className="border-b border-tc-border px-4 py-3 text-[1rem]">{format(new Date(r.created_at), "MMM d, h:mm a")}</td>
+                      <td className="border-b border-tc-border px-4 py-3 text-[1rem] font-semibold">{ANALYSIS_META[r.analysis_key as AnalysisKey]?.label ?? r.analysis_key}</td>
+                      <td className="border-b border-tc-border px-4 py-3 text-[1rem]">{r.donor_count}</td>
+                      <td className="border-b border-tc-border px-4 py-3 text-[1rem]">{r.suppressed_cells}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-            ) : (
-              <p className="mt-1 text-sm text-muted-foreground">No runs yet.</p>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+            </Card>
+          ) : (
+            <Card className="p-6 text-[1.05rem] text-tc-ink-2 sm:p-8">No runs yet.</Card>
+          )}
+        </div>
+      </PageBody>
     </main>
   );
 }

@@ -1,4 +1,5 @@
 import { PatientNav } from "@/components/patient-nav";
+import { PageBody, PageHero } from "@/components/page-hero";
 import { getMyPatient, getSessionUser } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getVocabField } from "@/lib/matching/vocabulary";
@@ -94,13 +95,14 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
   return (
     <main className="flex-1">
       <PatientNav email={user?.email ?? ""} />
-      <div className="mx-auto max-w-[800px] px-4 py-8">
-        <h1 className="text-2xl font-semibold">Health profile</h1>
-        <p className="mt-1 text-muted-foreground">Everything TrialCave holds about you. You control all of it.</p>
-        <div className="mt-6">
-          <ProfileTabs key={activeTab} overview={overview} displayOnly={displayOnly} devices={devices} defaultTab={activeTab} />
-        </div>
-      </div>
+      <PageHero
+        title="Health profile"
+        lede="Everything TrialCave holds about you. You control all of it."
+        width="narrow"
+      />
+      <PageBody width="narrow">
+        <ProfileTabs key={activeTab} overview={overview} displayOnly={displayOnly} devices={devices} defaultTab={activeTab} />
+      </PageBody>
     </main>
   );
 }

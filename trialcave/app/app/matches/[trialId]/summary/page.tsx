@@ -1,9 +1,8 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { differenceInYears, parseISO } from "date-fns";
-import { ArrowLeft } from "lucide-react";
 
 import { PatientNav } from "@/components/patient-nav";
+import { PageBody, PageHero } from "@/components/page-hero";
 import { getMyPatient, getSessionUser } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { loadMatches } from "@/lib/patient";
@@ -67,10 +66,16 @@ export default async function SummaryPage({ params }: { params: Promise<{ trialI
   return (
     <main className="flex-1">
       <PatientNav email={user?.email ?? ""} />
-      <div className="mx-auto max-w-[800px] px-4 py-8 print:max-w-none print:p-0">
-        <Link href={`/app/matches/${trialId}`} className="inline-flex items-center gap-1 text-sm text-primary hover:underline print:hidden">
-          <ArrowLeft className="size-4" aria-hidden /> Back to the study
-        </Link>
+      <div className="print:hidden">
+        <PageHero
+          tone="mist"
+          width="narrow"
+          back={{ href: `/app/matches/${trialId}`, label: "Back to the study" }}
+          title="Pre-screen summary"
+          lede="Choose what to include, then print it or save it as a PDF. Bring it to your doctor or send it to the study team. Nothing is shared from here."
+        />
+      </div>
+      <PageBody width="narrow" className="print:p-0">
         <SummaryClient
           trialTitle={trial.title}
           trialRef={trial.nct_id ?? (trial.is_demo ? "Demo study (fictional)" : "TrialCave clinic study")}
@@ -89,7 +94,7 @@ export default async function SummaryPage({ params }: { params: Promise<{ trialI
             .filter((d) => d.status !== "na")
             .map((d) => ({ id: d.criterionId, kind: d.kind, status: d.status, text: d.plainText, sensitive: Boolean(d.field && getVocabField(d.field)?.sensitive) }))}
         />
-      </div>
+      </PageBody>
     </main>
   );
 }

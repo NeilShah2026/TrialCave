@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { Heart, ShieldCheck } from "lucide-react";
 
 import { PatientNav } from "@/components/patient-nav";
+import { PageBody, PageHero } from "@/components/page-hero";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { getMyPatient, getSessionUser } from "@/lib/auth";
@@ -26,11 +28,13 @@ export default async function SettingsPage() {
   return (
     <main className="flex-1">
       <PatientNav email={user?.email ?? ""} />
-      <div className="mx-auto max-w-[800px] px-4 py-8">
-        <h1 className="text-2xl font-semibold">Settings</h1>
-        <p className="mt-1 text-muted-foreground">Language, travel, and how research clinics can reach you.</p>
-
-        <div className="mt-6 space-y-4">
+      <PageHero
+        title="Settings"
+        lede="Language, travel, and how research clinics can reach you."
+        width="narrow"
+      />
+      <PageBody width="narrow">
+        <div className="space-y-6">
           <SettingsForm
             towns={TOWN_NAMES}
             initial={{
@@ -50,30 +54,40 @@ export default async function SettingsPage() {
           />
 
           <Card>
-            <CardContent className="flex flex-wrap items-center justify-between gap-3 pt-6">
-              <div>
-                <h2 className="text-lg font-semibold">Data Donor</h2>
-                <p className="text-sm text-muted-foreground">
-                  {p?.is_donor
-                    ? "You're a Data Donor. Choose which research your donation supports."
-                    : "Optional. Donate de-identified data to research and collect a paycheck."}
-                </p>
+            <CardContent className="flex flex-wrap items-center justify-between gap-4 pt-6 sm:pt-7">
+              <div className="flex items-start gap-3">
+                <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-tc-accent text-tc-ink">
+                  <Heart className="size-5" aria-hidden />
+                </span>
+                <div>
+                  <h2 className="text-[1.15rem] font-bold">Data Donor</h2>
+                  <p className="text-[1rem] text-tc-ink-2">
+                    {p?.is_donor
+                      ? "You're a Data Donor. Choose which research your donation supports."
+                      : "Optional. Donate de-identified data to research and collect a paycheck."}
+                  </p>
+                </div>
               </div>
               <Button asChild variant="outline"><Link href="/app/donor">{p?.is_donor ? "Manage donation" : "Learn more"}</Link></Button>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="flex flex-wrap items-center justify-between gap-3 pt-6">
-              <div>
-                <h2 className="text-lg font-semibold">Your data and privacy</h2>
-                <p className="text-sm text-muted-foreground">Download, correct, or delete your data, or withdraw from research.</p>
+            <CardContent className="flex flex-wrap items-center justify-between gap-4 pt-6 sm:pt-7">
+              <div className="flex items-start gap-3">
+                <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-tc-primary-soft text-tc-primary-ink">
+                  <ShieldCheck className="size-5" aria-hidden />
+                </span>
+                <div>
+                  <h2 className="text-[1.15rem] font-bold">Your data and privacy</h2>
+                  <p className="text-[1rem] text-tc-ink-2">Download, correct, or delete your data, or withdraw from research.</p>
+                </div>
               </div>
               <Button asChild variant="outline"><Link href="/app/privacy">Privacy controls</Link></Button>
             </CardContent>
           </Card>
         </div>
-      </div>
+      </PageBody>
     </main>
   );
 }

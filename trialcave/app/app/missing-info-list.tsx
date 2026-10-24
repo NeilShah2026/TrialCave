@@ -44,7 +44,7 @@ export function MissingInfoList({ items, limit = 5 }: { items: MissingItem[]; li
   const visible = items.filter((i) => !skipped.has(i.field)).slice(0, limit);
 
   if (visible.length === 0) {
-    return <p className="text-sm text-muted-foreground">Nothing outstanding right now.</p>;
+    return <p className="rounded-2xl bg-tc-mist px-5 py-4 text-[1rem] text-tc-ink-2">Nothing outstanding right now.</p>;
   }
 
   return (
@@ -53,37 +53,39 @@ export function MissingInfoList({ items, limit = 5 }: { items: MissingItem[]; li
         const Icon = item.action === "question" ? HelpCircle : item.action === "add_lab" ? FlaskConical : FileText;
         const busy = pending && busyField === item.field;
         return (
-          <li key={item.field} className="flex flex-wrap items-center justify-between gap-2">
-            <span className="flex min-w-0 items-start gap-2 text-sm">
-              <Icon className="mt-0.5 size-4 shrink-0 text-tc-warning" aria-hidden />
+          <li key={item.field} className="rounded-2xl bg-tc-mist p-4">
+            <span className="flex min-w-0 items-start gap-3 text-[1.05rem] font-semibold text-tc-ink">
+              <Icon className="mt-0.5 size-5 shrink-0 text-tc-warning" aria-hidden />
               <span>
                 {item.action === "question" && item.question ? item.question : item.label}
-                <span className="text-muted-foreground">
-                  {" "}· helps check {item.trialCount} trial{item.trialCount === 1 ? "" : "s"}
+                <span className="block text-[0.95rem] font-normal text-tc-muted">
+                  Helps check {item.trialCount} trial{item.trialCount === 1 ? "" : "s"}
                 </span>
               </span>
             </span>
-            {item.action === "question" ? (
-              <span className="flex gap-1" role="group" aria-label={item.label}>
-                <Button size="sm" variant="outline" disabled={pending} aria-busy={busy} onClick={() => answer(item.field, true)}>
-                  Yes
+            <div className="mt-3 pl-8">
+              {item.action === "question" ? (
+                <span className="flex flex-wrap gap-2" role="group" aria-label={item.label}>
+                  <Button size="sm" variant="outline" disabled={pending} aria-busy={busy} onClick={() => answer(item.field, true)}>
+                    Yes
+                  </Button>
+                  <Button size="sm" variant="outline" disabled={pending} aria-busy={busy} onClick={() => answer(item.field, false)}>
+                    No
+                  </Button>
+                  <Button size="sm" variant="ghost" disabled={pending} onClick={() => notSure(item.field)}>
+                    Not sure
+                  </Button>
+                </span>
+              ) : item.action === "add_lab" ? (
+                <Button asChild size="sm" variant="outline">
+                  <Link href="/app/profile?tab=labs">Add result</Link>
                 </Button>
-                <Button size="sm" variant="outline" disabled={pending} aria-busy={busy} onClick={() => answer(item.field, false)}>
-                  No
+              ) : (
+                <Button asChild size="sm" variant="outline">
+                  <Link href="/app/records">Add a record</Link>
                 </Button>
-                <Button size="sm" variant="ghost" disabled={pending} onClick={() => notSure(item.field)}>
-                  Not sure
-                </Button>
-              </span>
-            ) : item.action === "add_lab" ? (
-              <Button asChild size="sm" variant="outline">
-                <Link href="/app/profile?tab=labs">Add result</Link>
-              </Button>
-            ) : (
-              <Button asChild size="sm" variant="outline">
-                <Link href="/app/records">Add a record</Link>
-              </Button>
-            )}
+              )}
+            </div>
           </li>
         );
       })}

@@ -1,20 +1,26 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Atkinson_Hyperlegible_Next } from "next/font/google";
 import { connection } from "next/server";
 import "./globals.css";
 
+import { ChromeGate } from "@/components/chrome-gate";
 import { DemoBanner } from "@/components/demo-banner";
 import { SiteFooter } from "@/components/site-footer";
 import { Toaster } from "@/components/ui/sonner";
 
-const inter = Inter({
-  variable: "--font-inter",
+const atkinson = Atkinson_Hyperlegible_Next({
+  variable: "--font-atkinson",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  display: "swap",
+  // next/font has no metric overrides for this family yet; skip the generated fallback.
+  adjustFontFallback: false,
+  fallback: ["ui-sans-serif", "system-ui", "sans-serif"],
 });
 
 export const metadata: Metadata = {
   title: {
-    default: "TrialCave",
+    default: "TrialCave: find a clinical trial that fits you",
     template: "%s · TrialCave",
   },
   description:
@@ -30,19 +36,23 @@ export default async function RootLayout({
   await connection();
 
   return (
-    <html lang="en" className={`${inter.variable} h-full antialiased`}>
+    <html lang="en" className={`${atkinson.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col bg-background text-foreground">
         <a
           href="#main-content"
-          className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded-md focus:bg-card focus:px-3 focus:py-2 focus:text-sm focus:shadow"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[100] focus:rounded-xl focus:bg-white focus:px-4 focus:py-3 focus:font-bold focus:shadow-pop"
         >
           Skip to content
         </a>
-        <DemoBanner />
+        <ChromeGate>
+          <DemoBanner />
+        </ChromeGate>
         <div id="main-content" className="flex flex-1 flex-col">
           {children}
         </div>
-        <SiteFooter />
+        <ChromeGate>
+          <SiteFooter />
+        </ChromeGate>
         <Toaster />
       </body>
     </html>

@@ -34,16 +34,16 @@ export function ResearchCard({ withdrawn, isDonor }: { withdrawn: boolean; isDon
 
   return (
     <Card>
-      <CardContent className="pt-6">
-        <h2 className="text-lg font-semibold">Withdraw from research</h2>
+      <CardContent className="pt-6 sm:pt-7">
+        <h2 className="text-[1.45rem] font-extrabold tracking-tight">Withdraw from research</h2>
         {withdrawn ? (
           <>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="mt-3 rounded-2xl bg-tc-mist px-5 py-4 text-[1.05rem] font-semibold text-tc-ink-2">
               You&apos;ve withdrawn. Your data isn&apos;t used in any new Enclave analysis.
             </p>
             <Button
               variant="outline"
-              className="mt-3"
+              className="mt-4"
               disabled={pending}
               onClick={() => run(rejoinResearch, "You can donate again. Turn on the kinds of research you want on the Donor page.")}
             >
@@ -52,20 +52,24 @@ export function ResearchCard({ withdrawn, isDonor }: { withdrawn: boolean; isDon
           </>
         ) : (
           <>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="mt-2 text-[1.05rem] text-tc-ink-2">
               Your data won&apos;t be used in any new analysis. Group results already produced
               can&apos;t be recalled. Matching and applying aren&apos;t affected.
               {!isDonor ? " You're not a Data Donor, so nothing is being used for research now." : ""}
             </p>
             {confirming ? (
-              <div className="mt-3 flex flex-wrap gap-2" role="alertdialog" aria-label="Confirm withdrawal">
+              <div
+                className="mt-4 flex flex-wrap gap-3 rounded-[20px] bg-white p-5 shadow-pop"
+                role="alertdialog"
+                aria-label="Confirm withdrawal"
+              >
                 <Button variant="destructive" disabled={pending} onClick={() => run(withdrawFromResearch, "Withdrawn from research.")}>
                   {pending ? "Withdrawing…" : "Yes, withdraw"}
                 </Button>
                 <Button variant="ghost" disabled={pending} onClick={() => setConfirming(false)}>Cancel</Button>
               </div>
             ) : (
-              <Button variant="outline" className="mt-3" onClick={() => setConfirming(true)}>Withdraw from research</Button>
+              <Button variant="outline" className="mt-4" onClick={() => setConfirming(true)}>Withdraw from research</Button>
             )}
           </>
         )}
@@ -110,20 +114,20 @@ function ConfirmDelete({
   }
 
   return (
-    <div className="rounded-md border border-border p-4">
-      <h3 className="font-semibold">{title}</h3>
-      <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+    <div className="rounded-2xl border-2 border-tc-border p-5">
+      <h3 className="text-[1.15rem] font-bold">{title}</h3>
+      <p className="mt-1 text-[1rem] text-tc-ink-2">{description}</p>
       {!open ? (
-        <Button variant="outline" className="mt-3 border-tc-danger/40 text-tc-danger" onClick={() => setOpen(true)}>
+        <Button variant="outline" className="mt-4 border-tc-danger/50 text-tc-danger-ink hover:border-tc-danger-ink" onClick={() => setOpen(true)}>
           {buttonLabel}
         </Button>
       ) : (
-        <div className="mt-3 space-y-2" role="alertdialog" aria-labelledby={`${id}-label`}>
-          <Label id={`${id}-label`} htmlFor={`${id}-input`}>
+        <div className="mt-4 space-y-3 rounded-2xl bg-tc-danger-soft p-5" role="alertdialog" aria-labelledby={`${id}-label`}>
+          <Label id={`${id}-label`} htmlFor={`${id}-input`} className="text-tc-danger-ink">
             Type DELETE to confirm. This can&apos;t be undone.
           </Label>
-          <Input id={`${id}-input`} value={text} onChange={(e) => setText(e.target.value)} autoComplete="off" className="max-w-[200px]" />
-          <div className="flex gap-2">
+          <Input id={`${id}-input`} value={text} onChange={(e) => setText(e.target.value)} autoComplete="off" className="max-w-[240px]" />
+          <div className="flex flex-wrap gap-3">
             <Button variant="destructive" disabled={pending || text.trim() !== "DELETE"} onClick={submit}>
               {pending ? "Deleting…" : buttonLabel}
             </Button>
@@ -141,8 +145,8 @@ export function DeleteDataCard() {
   const router = useRouter();
   return (
     <Card>
-      <CardContent className="space-y-4 pt-6">
-        <h2 className="text-lg font-semibold">Delete</h2>
+      <CardContent className="space-y-4 pt-6 sm:pt-7">
+        <h2 className="text-[1.45rem] font-extrabold tracking-tight">Delete</h2>
         <ConfirmDelete
           title="Delete my health data"
           description="Deletes your documents and files, health facts, device data, scans, answers, matches, and research choices, and withdraws open applications and invitations. We keep payment records and consent records, as the law requires."

@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { ClinicNav } from "@/components/clinic-nav";
+import { PageBody, PageHero } from "@/components/page-hero";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -39,36 +40,50 @@ export default async function ClinicHome() {
   return (
     <main className="flex-1">
       <ClinicNav email={user?.email ?? ""} clinicName={clinic.name} />
-      <div className="mx-auto max-w-[1100px] px-4 py-8">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold">Your studies</h1>
-          <Button asChild><Link href="/clinic/studies/new">New study</Link></Button>
-        </div>
-
+      <PageHero
+        tone="indigo"
+        kicker={clinic.name}
+        title="Your studies"
+        actions={<Button asChild variant="secondary" size="lg"><Link href="/clinic/studies/new">New study</Link></Button>}
+      />
+      <PageBody width="wide">
         {!clinic.verified ? (
-          <p className="mt-3 rounded-md bg-tc-secondary-soft px-3 py-2 text-sm">
+          <p className="mb-6 rounded-2xl bg-tc-warning-soft px-5 py-4 font-semibold text-tc-warning-ink">
             Your clinic is pending verification. You can create studies, but invitations are
             disabled until TrialCave verifies your clinic.
           </p>
         ) : null}
 
         {!studies || studies.length === 0 ? (
-          <div className="mt-6 rounded-2xl border border-border bg-card p-8 text-center text-muted-foreground">
+          <Card className="p-10 text-center text-[1.1rem] text-tc-ink-2">
             No studies yet. Create one to start finding participants.
-          </div>
+          </Card>
         ) : (
-          <div className="mt-6 space-y-3">
+          <div className="grid gap-4">
             {studies.map((s) => {
               const c = counts.get(s.id)!;
               return (
-                <Link key={s.id} href={`/clinic/studies/${s.id}`} className="block">
-                  <Card className="transition-colors hover:border-primary">
-                    <CardContent className="flex items-center justify-between py-4">
-                      <div>
-                        <p className="font-medium">{s.title}</p>
-                        <p className="text-xs text-muted-foreground">
-                          Invited {c.invited} · Approved {c.approved} · Applications {c.applications}
-                        </p>
+                <Link
+                  key={s.id}
+                  href={`/clinic/studies/${s.id}`}
+                  className="block rounded-[24px] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-tc-secondary-soft"
+                >
+                  <Card className="transition-colors hover:border-tc-secondary">
+                    <CardContent className="flex flex-wrap items-center justify-between gap-5 p-6 sm:p-7">
+                      <div className="min-w-0">
+                        <p className="text-[1.15rem] font-bold text-tc-ink">{s.title}</p>
+                        <dl className="mt-3 flex flex-wrap gap-3">
+                          {[
+                            ["Invited", c.invited],
+                            ["Approved", c.approved],
+                            ["Applications", c.applications],
+                          ].map(([label, n]) => (
+                            <div key={label} className="flex flex-col-reverse rounded-2xl bg-tc-mist px-4 py-2">
+                              <dt className="text-[0.9rem] font-bold text-tc-muted">{label}</dt>
+                              <dd className="text-[1.4rem] font-extrabold leading-tight text-tc-secondary">{n}</dd>
+                            </div>
+                          ))}
+                        </dl>
                       </div>
                       <Badge variant={s.study_status === "active" ? "success" : "muted"}>{STUDY_STATUS_LABEL[s.study_status] ?? s.study_status}</Badge>
                     </CardContent>
@@ -78,7 +93,7 @@ export default async function ClinicHome() {
             })}
           </div>
         )}
-      </div>
+      </PageBody>
     </main>
   );
 }

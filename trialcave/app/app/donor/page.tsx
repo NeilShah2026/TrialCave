@@ -3,6 +3,7 @@ import { format } from "date-fns";
 import { HeartHandshake, ShieldCheck, Wallet } from "lucide-react";
 
 import { PatientNav } from "@/components/patient-nav";
+import { PageBody, PageHero } from "@/components/page-hero";
 import { Card, CardContent } from "@/components/ui/card";
 import { getMyPatient, getSessionUser } from "@/lib/auth";
 import { loadProfile, loadDonorSummary, formatCents } from "@/lib/patient";
@@ -24,14 +25,14 @@ export default async function DonorPage() {
     return (
       <main className="flex-1">
         <PatientNav email={user?.email ?? ""} />
-        <div className="mx-auto max-w-[800px] px-4 py-8">
-          <h1 className="text-2xl font-semibold">Become a Data Donor</h1>
-          <p className="mt-2 text-muted-foreground">
-            Like donating blood plasma: you contribute de-identified data to research, it stays
-            inside the Enclave, and you collect a paycheck when your donation powers a study.
-            Matching and applying stay free whether or not you donate.
-          </p>
-          <div className="mt-6 grid gap-3 sm:grid-cols-3">
+        <PageHero
+          kicker="Data Donor"
+          title="Become a Data Donor"
+          lede="Like donating blood plasma: you contribute de-identified data to research, it stays inside the Enclave, and you collect a paycheck when your donation powers a study. Matching and applying stay free whether or not you donate."
+          width="narrow"
+        />
+        <PageBody width="narrow">
+          <div className="grid gap-4 sm:grid-cols-3">
             {[
               { icon: ShieldCheck, title: "Your data", text: "De-identified and kept in the Enclave. No one downloads it." },
               { icon: HeartHandshake, title: "Your choice", text: "Pick each kind of data and research. Change it anytime." },
@@ -39,19 +40,21 @@ export default async function DonorPage() {
             ].map((c) => (
               <Card key={c.title}>
                 <CardContent className="pt-6">
-                  <c.icon className="size-5 text-primary" aria-hidden />
-                  <h2 className="mt-2 font-semibold">{c.title}</h2>
-                  <p className="mt-1 text-sm text-muted-foreground">{c.text}</p>
+                  <span className="flex size-11 items-center justify-center rounded-2xl bg-tc-primary-soft text-tc-primary-ink">
+                    <c.icon className="size-5" aria-hidden />
+                  </span>
+                  <h2 className="mt-3 text-[1.15rem] font-bold">{c.title}</h2>
+                  <p className="mt-1 text-[1rem] text-tc-ink-2">{c.text}</p>
                 </CardContent>
               </Card>
             ))}
           </div>
           <BecomeDonorForm />
-          <p className="mt-4 text-sm text-muted-foreground">
+          <p className="mt-6 text-[1rem] text-tc-ink-2">
             How your donation is protected:{" "}
-            <Link href="/how-it-works#enclave" className="text-primary hover:underline">How the Enclave works</Link>
+            <Link href="/how-it-works#enclave" className="font-bold text-tc-primary-ink hover:underline">How the Enclave works</Link>
           </p>
-        </div>
+        </PageBody>
       </main>
     );
   }
@@ -85,73 +88,70 @@ export default async function DonorPage() {
   return (
     <main className="flex-1">
       <PatientNav email={user?.email ?? ""} />
-      <div className="mx-auto max-w-[800px] px-4 py-8">
-        <h1 className="text-2xl font-semibold">Your Data Donor paycheck</h1>
+      <PageHero kicker="Data Donor" title="Your Data Donor paycheck" width="narrow">
+        <div className="rounded-[24px] border border-tc-night-line bg-tc-night-2 p-6">
+          <p className="text-[clamp(2.2rem,5vw,3rem)] font-extrabold leading-none text-tc-mint">{formatCents(donor.totalCents)}</p>
+          <p className="mt-3 text-[1.05rem] text-tc-night-text">
+            {formatCents(donor.donationCents)} from donations · {formatCents(donor.researchCents)} from research your data powered
+          </p>
+          {DEMO_MODE ? <p className="mt-1 text-[0.95rem] text-tc-night-text">Demo amounts.</p> : null}
+          <p className="mt-3 text-[1.05rem] font-semibold text-white">
+            Your donation supported {projects.size || donor.studyCount} stud{(projects.size || donor.studyCount) === 1 ? "y" : "ies"}.
+          </p>
+        </div>
+      </PageHero>
+      <PageBody width="narrow">
+        <div className="space-y-6">
+          {projects.size > 0 ? (
+            <Card>
+              <CardContent className="pt-6 sm:pt-7">
+                <h2 className="text-[1.45rem] font-extrabold tracking-tight">Studies your donation powered</h2>
+                <ul className="mt-3">
+                  {[...projects.values()].map((p) => (
+                    <li key={p.title} className="flex flex-wrap items-center justify-between gap-2 border-t border-tc-border py-3 text-[1.05rem] first:border-t-0">
+                      <span className="font-semibold text-tc-ink">{p.title}</span>
+                      <span className="text-[0.95rem] text-tc-muted">
+                        <span className="capitalize">{p.researchType}</span> · {format(new Date(p.last), "MMM d, yyyy")}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          ) : null}
 
-        <Card className="mt-4 border-tc-accent bg-tc-accent/30">
-          <CardContent className="pt-6">
-            <p className="text-3xl font-semibold">{formatCents(donor.totalCents)}</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {formatCents(donor.donationCents)} from donations · {formatCents(donor.researchCents)} from research your data powered
-            </p>
-            {DEMO_MODE ? <p className="mt-1 text-xs text-muted-foreground">Demo amounts.</p> : null}
-            <p className="mt-2 text-sm">
-              Your donation supported {projects.size || donor.studyCount} stud{(projects.size || donor.studyCount) === 1 ? "y" : "ies"}.
-            </p>
-          </CardContent>
-        </Card>
-
-        {projects.size > 0 ? (
-          <Card className="mt-4">
-            <CardContent className="pt-6">
-              <h2 className="text-lg font-semibold">Studies your donation powered</h2>
-              <ul className="mt-3 divide-y divide-border">
-                {[...projects.values()].map((p) => (
-                  <li key={p.title} className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm">
-                    <span>{p.title}</span>
-                    <span className="text-muted-foreground">
-                      <span className="capitalize">{p.researchType}</span> · {format(new Date(p.last), "MMM d, yyyy")}
-                    </span>
-                  </li>
-                ))}
-              </ul>
+          <Card>
+            <CardContent className="pt-6 sm:pt-7">
+              <h2 className="text-[1.45rem] font-extrabold tracking-tight">Paycheck history</h2>
+              {donor.entries.length === 0 ? (
+                <p className="mt-3 rounded-2xl bg-tc-mist px-5 py-4 text-[1rem] text-tc-ink-2">
+                  No paychecks yet. You&apos;ll see one here when your donation powers an analysis.
+                </p>
+              ) : (
+                <ul className="mt-3">
+                  {donor.entries.map((e, i) => (
+                    <li key={i} className="flex items-center justify-between border-t border-tc-border py-3 text-[1.05rem] first:border-t-0">
+                      <span className="min-w-0 flex-1 truncate text-tc-ink">{e.description}</span>
+                      <span className="ml-3 shrink-0 text-[0.95rem] text-tc-muted">{format(new Date(e.createdAt), "MMM d")}</span>
+                      <span className="ml-4 shrink-0 font-extrabold text-tc-ink">{formatCents(e.amountCents)}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </CardContent>
           </Card>
-        ) : null}
 
-        <Card className="mt-4">
-          <CardContent className="pt-6">
-            <h2 className="text-lg font-semibold">Paycheck history</h2>
-            {donor.entries.length === 0 ? (
-              <p className="mt-2 text-sm text-muted-foreground">
-                No paychecks yet. You&apos;ll see one here when your donation powers an analysis.
-              </p>
-            ) : (
-              <ul className="mt-3 divide-y divide-border">
-                {donor.entries.map((e, i) => (
-                  <li key={i} className="flex items-center justify-between py-2 text-sm">
-                    <span className="min-w-0 flex-1 truncate">{e.description}</span>
-                    <span className="ml-3 shrink-0 text-muted-foreground">{format(new Date(e.createdAt), "MMM d")}</span>
-                    <span className="ml-3 shrink-0 font-medium">{formatCents(e.amountCents)}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
-
-        <div className="mt-4">
           <ConsentGrid initial={consentCells} />
-        </div>
 
-        <div className="mt-6 flex flex-wrap items-start justify-between gap-4">
-          <p className="text-sm text-muted-foreground">
-            How your donation is protected:{" "}
-            <Link href="/how-it-works#enclave" className="text-primary hover:underline">How the Enclave works</Link>
-          </p>
-          <StopDonatingButton />
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <p className="text-[1rem] text-tc-ink-2">
+              How your donation is protected:{" "}
+              <Link href="/how-it-works#enclave" className="font-bold text-tc-primary-ink hover:underline">How the Enclave works</Link>
+            </p>
+            <StopDonatingButton />
+          </div>
         </div>
-      </div>
+      </PageBody>
     </main>
   );
 }

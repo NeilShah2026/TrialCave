@@ -65,8 +65,8 @@ export function DocumentActions({
 
   if (confirming) {
     return (
-      <div role="alertdialog" aria-label="Delete this document?" className="flex flex-wrap items-center gap-2 rounded-md border border-tc-danger/40 bg-tc-danger/5 p-2 text-sm">
-        <span>Delete this document?</span>
+      <div role="alertdialog" aria-label="Delete this document?" className="flex flex-wrap items-center gap-2 rounded-2xl bg-white p-5 text-[1rem] text-tc-ink shadow-pop">
+        <span className="w-full font-bold">Delete this document?</span>
         {confirmedCount > 0 ? (
           <>
             <Button size="sm" variant="destructive" disabled={pending} onClick={() => remove(true)}>
@@ -92,11 +92,11 @@ export function DocumentActions({
     <div className="flex flex-wrap gap-2">
       {hasFile ? (
         <Button size="sm" variant="outline" onClick={view} disabled={pending}>
-          <ExternalLink className="size-4" aria-hidden /> View original
+          <ExternalLink aria-hidden /> View original
         </Button>
       ) : null}
-      <Button size="sm" variant="ghost" onClick={() => setConfirming(true)} disabled={pending}>
-        <Trash2 className="size-4" aria-hidden /> Delete
+      <Button size="sm" variant="ghost" className="text-tc-danger-ink hover:bg-tc-danger-soft" onClick={() => setConfirming(true)} disabled={pending}>
+        <Trash2 aria-hidden /> Delete
       </Button>
     </div>
   );

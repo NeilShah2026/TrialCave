@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { format } from "date-fns";
-import { ArrowLeft, ExternalLink, MapPin } from "lucide-react";
+import { ExternalLink, MapPin } from "lucide-react";
 
-import { PublicHeader } from "@/components/public-header";
-import { Badge } from "@/components/ui/badge";
+import { PageBody, PageHero } from "@/components/page-hero";
+import { SiteHeader } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { CriteriaList } from "@/components/criteria-list";
 import { categoryLabel } from "@/lib/categories";
 import { getTrialDetail } from "@/lib/trials";
@@ -14,6 +14,9 @@ import { getSessionUser } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Trial details" };
+
+const DARK_BADGE =
+  "inline-flex items-center rounded-full bg-tc-night-2 px-3.5 py-1.5 text-[0.95rem] font-bold text-tc-mint";
 
 export default async function TrialDetailPage({
   params,
@@ -28,144 +31,149 @@ export default async function TrialDetailPage({
   const summary = trial.plainSummary ?? trial.briefSummary ?? "";
   const parseFailed = trial.parseStatus === "failed" || criteria.length === 0;
 
+  const heroCta =
+    user?.role === "patient" ? (
+      <Button asChild variant="mint" size="lg">
+        <Link href={`/app/matches/${id}`}>Check my eligibility</Link>
+      </Button>
+    ) : !user ? (
+      <Button asChild variant="mint" size="lg">
+        <Link href={`/login?next=/app/matches/${id}`}>Sign in</Link>
+      </Button>
+    ) : null;
+
   return (
     <main className="flex-1">
-      <PublicHeader />
-      <div className="mx-auto max-w-[800px] px-4 py-8">
-        <Link
-          href="/trials"
-          className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
-        >
-          <ArrowLeft className="size-4" aria-hidden /> Back to trials
-        </Link>
-
-        <div className="mt-4 flex flex-wrap items-center gap-2">
-          <Badge variant="secondary">{categoryLabel(trial.conditionCategory)}</Badge>
+      <SiteHeader />
+      <PageHero
+        tone="night"
+        back={{ href: "/trials", label: "All studies" }}
+        kicker={categoryLabel(trial.conditionCategory)}
+        title={trial.title}
+        lede={trial.nctId ? <span className="text-[1rem]">{trial.nctId}</span> : undefined}
+        actions={heroCta}
+      >
+        <ul className="flex flex-wrap items-center gap-2" aria-label="Study details">
           {trial.phases.map((p) => (
-            <Badge key={p} variant="outline">
+            <li key={p} className={DARK_BADGE}>
               {p.replace("PHASE", "Phase ")}
-            </Badge>
+            </li>
           ))}
-          <Badge variant="muted">
+          <li className={DARK_BADGE}>
             {trial.isDemo ? "Demo study (fictional)" : "ClinicalTrials.gov"}
-          </Badge>
-        </div>
+          </li>
+        </ul>
+      </PageHero>
 
-        <h1 className="mt-3 text-2xl font-semibold">{trial.title}</h1>
-        {trial.nctId ? (
-          <p className="mt-1 text-sm text-muted-foreground">{trial.nctId}</p>
-        ) : null}
-
-        {summary ? (
-          <Card className="mt-6">
-            <CardContent className="pt-6">
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                In plain words
-              </h2>
-              <p className="mt-2 text-sm">{summary}</p>
-              {trial.whatIsInvolved ? (
-                <p className="mt-3 text-sm text-muted-foreground">{trial.whatIsInvolved}</p>
-              ) : null}
-            </CardContent>
-          </Card>
-        ) : null}
-
-        <Card className="mt-4">
-          <CardContent className="pt-6">
-            {parseFailed ? (
-              <div>
-                <p className="text-sm text-muted-foreground">
-                  Eligibility checklist unavailable. Read the full criteria below.
-                </p>
-                {trial.eligibilityText ? (
-                  <pre className="mt-3 whitespace-pre-wrap rounded-md bg-muted p-4 text-sm">
-                    {trial.eligibilityText}
-                  </pre>
+      <PageBody width="wide" className="bg-tc-mist">
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_380px]">
+          <div className="min-w-0 space-y-6">
+            {summary ? (
+              <Card className="p-6 sm:p-8">
+                <h2 className="text-[clamp(1.6rem,2.6vw,2.2rem)] font-extrabold tracking-[-0.02em]">
+                  In plain words
+                </h2>
+                <p className="mt-3 text-[1.1rem] leading-relaxed text-tc-ink">{summary}</p>
+                {trial.whatIsInvolved ? (
+                  <p className="mt-4 text-[1.05rem] leading-relaxed text-tc-ink-2">{trial.whatIsInvolved}</p>
                 ) : null}
-              </div>
-            ) : (
-              <CriteriaList criteria={criteria} />
-            )}
-          </CardContent>
-        </Card>
-
-        {trial.locations.length > 0 ? (
-          <Card className="mt-4">
-            <CardContent className="pt-6">
-              <h2 className="text-lg font-semibold">Where</h2>
-              <ul className="mt-3 space-y-2">
-                {trial.locations.slice(0, 6).map((l, i) => (
-                  <li key={i} className="flex items-start gap-2 text-sm">
-                    <MapPin className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />
-                    <span>
-                      {l.facility}
-                      {l.city ? `, ${l.city}` : ""}
-                      {l.state ? `, ${l.state}` : ""}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-        ) : null}
-
-        <div className="mt-6 flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
-          <div>
-            {trial.sponsor ? <span>Sponsor: {trial.sponsor}</span> : null}
-            {trial.nctId && trial.ctgovLastUpdated ? (
-              <span>
-                {trial.sponsor ? " · " : ""}Source: ClinicalTrials.gov · last updated{" "}
-                {format(new Date(trial.ctgovLastUpdated), "MMM d, yyyy")}
-              </span>
+              </Card>
             ) : null}
-          </div>
-          {trial.nctId ? (
-            <Button asChild variant="outline" size="sm">
-              <a
-                href={`https://clinicaltrials.gov/study/${trial.nctId}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1"
-              >
-                View on ClinicalTrials.gov <ExternalLink className="size-3.5" aria-hidden />
-              </a>
-            </Button>
-          ) : null}
-        </div>
 
-        <Card className="mt-6">
-          <CardContent className="pt-6 text-center">
-            {user?.role === "patient" ? (
-              <>
-                <p className="text-sm text-muted-foreground">
-                  See how your own records compare with this trial, criterion by criterion.
-                </p>
-                <Button asChild className="mt-3">
-                  <Link href={`/app/matches/${id}`}>Check my eligibility</Link>
-                </Button>
-              </>
-            ) : user ? (
-              <p className="text-sm text-muted-foreground">
-                Eligibility checks are available to patient accounts.
-              </p>
-            ) : (
-              <>
-                <p className="text-sm text-muted-foreground">
-                  Sign in to see if you qualify, criterion by criterion. It&apos;s free.
-                </p>
-                <div className="mt-3 flex flex-wrap justify-center gap-2">
-                  <Button asChild>
-                    <Link href={`/login?next=/app/matches/${id}`}>Sign in</Link>
-                  </Button>
-                  <Button asChild variant="outline">
-                    <Link href="/signup">Create an account</Link>
-                  </Button>
+            <Card className="p-6 sm:p-8">
+              {parseFailed ? (
+                <div>
+                  <p className="rounded-2xl bg-tc-warning-soft px-5 py-4 font-semibold text-tc-warning-ink">
+                    Eligibility checklist unavailable. Read the full criteria below.
+                  </p>
+                  {trial.eligibilityText ? (
+                    <pre className="mt-4 whitespace-pre-wrap rounded-2xl bg-tc-mist p-5 font-sans text-[1rem] leading-relaxed text-tc-ink-2">
+                      {trial.eligibilityText}
+                    </pre>
+                  ) : null}
                 </div>
-              </>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+              ) : (
+                <CriteriaList criteria={criteria} />
+              )}
+            </Card>
+
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.95rem] text-tc-muted">
+              {trial.sponsor ? <span>Sponsor: {trial.sponsor}</span> : null}
+              {trial.nctId && trial.ctgovLastUpdated ? (
+                <span>
+                  {trial.sponsor ? "· " : ""}Source: ClinicalTrials.gov · last updated{" "}
+                  {format(new Date(trial.ctgovLastUpdated), "MMM d, yyyy")}
+                </span>
+              ) : null}
+            </div>
+          </div>
+
+          <aside className="space-y-6 lg:sticky lg:top-24 lg:self-start">
+            <Card className="p-6">
+              {user?.role === "patient" ? (
+                <>
+                  <h2 className="text-[1.15rem] font-bold">Do I qualify?</h2>
+                  <p className="mt-2 text-[1.05rem] text-tc-ink-2">
+                    See how your own records compare with this trial, criterion by criterion.
+                  </p>
+                  <Button asChild size="lg" className="mt-4 w-full">
+                    <Link href={`/app/matches/${id}`}>Check my eligibility</Link>
+                  </Button>
+                </>
+              ) : user ? (
+                <p className="text-[1.05rem] text-tc-ink-2">
+                  Eligibility checks are available to patient accounts.
+                </p>
+              ) : (
+                <>
+                  <h2 className="text-[1.15rem] font-bold">Do I qualify?</h2>
+                  <p className="mt-2 text-[1.05rem] text-tc-ink-2">
+                    Sign in to see if you qualify, criterion by criterion. It&apos;s free.
+                  </p>
+                  <div className="mt-4 flex flex-col gap-3">
+                    <Button asChild size="lg" className="w-full">
+                      <Link href={`/login?next=/app/matches/${id}`}>Sign in</Link>
+                    </Button>
+                    <Button asChild size="lg" variant="outline" className="w-full">
+                      <Link href="/signup">Create an account</Link>
+                    </Button>
+                  </div>
+                </>
+              )}
+            </Card>
+
+            {trial.locations.length > 0 ? (
+              <Card className="p-6">
+                <h2 className="text-[1.15rem] font-bold">Where</h2>
+                <ul className="mt-4 space-y-3">
+                  {trial.locations.slice(0, 6).map((l, i) => (
+                    <li key={i} className="flex items-start gap-3 text-[1.05rem] text-tc-ink">
+                      <MapPin className="mt-0.5 size-5 shrink-0 text-tc-primary" aria-hidden />
+                      <span>
+                        {l.facility}
+                        {l.city ? `, ${l.city}` : ""}
+                        {l.state ? `, ${l.state}` : ""}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </Card>
+            ) : null}
+
+            {trial.nctId ? (
+              <Button asChild variant="outline" className="w-full">
+                <a
+                  href={`https://clinicaltrials.gov/study/${trial.nctId}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  View on ClinicalTrials.gov <ExternalLink aria-hidden />
+                </a>
+              </Button>
+            ) : null}
+          </aside>
+        </div>
+      </PageBody>
     </main>
   );
 }

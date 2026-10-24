@@ -29,7 +29,7 @@ export function LanguageSwitcher({ current }: { current: Language }) {
   }
 
   return (
-    <div className="flex flex-wrap gap-1" role="group" aria-label="Language">
+    <div className="flex flex-wrap gap-2" role="group" aria-label="Language">
       {LANGUAGES.map((l) => (
         <button
           key={l.code}
@@ -38,8 +38,10 @@ export function LanguageSwitcher({ current }: { current: Language }) {
           disabled={pending}
           aria-pressed={current === l.code}
           className={cn(
-            "rounded-md border px-2 py-1 text-xs transition-colors",
-            current === l.code ? "border-primary bg-tc-primary-soft text-primary" : "border-border hover:bg-muted",
+            "min-h-11 rounded-full border-2 px-4 text-[0.95rem] font-bold transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-tc-primary-soft disabled:opacity-60",
+            current === l.code
+              ? "border-tc-primary bg-tc-primary text-white"
+              : "border-tc-border bg-white text-tc-ink hover:border-tc-primary",
           )}
         >
           {l.nativeLabel}

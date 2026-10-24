@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { differenceInDays } from "date-fns";
+import { ArrowRight } from "lucide-react";
 
 import { PatientNav } from "@/components/patient-nav";
+import { PageBody, PageHero } from "@/components/page-hero";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { getMyPatient, getSessionUser } from "@/lib/auth";
@@ -58,35 +60,44 @@ export default async function InboxPage() {
   return (
     <main className="flex-1">
       <PatientNav email={user?.email ?? ""} />
-      <div className="mx-auto max-w-[800px] px-4 py-8">
-        <h1 className="text-2xl font-semibold">Inbox</h1>
+      <PageHero
+        title="Inbox"
+        lede="Invitations from research clinics."
+        width="narrow"
+      />
+      <PageBody width="narrow">
         {rows.length === 0 ? (
-          <div className="mt-6 rounded-2xl border border-border bg-card p-8 text-center text-muted-foreground">
-            No invitations yet. Clinics can only reach you if you meet a study&apos;s criteria.
-          </div>
+          <Card>
+            <CardContent className="pt-8 text-center text-[1.05rem] text-tc-ink-2 sm:pt-8">
+              No invitations yet. Clinics can only reach you if you meet a study&apos;s criteria.
+            </CardContent>
+          </Card>
         ) : (
-          <div className="mt-6 space-y-3">
+          <div className="space-y-4">
             {rows.map((r) => (
-              <Link key={r.id} href={`/app/inbox/${r.id}`} className="block rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
-                <Card className="transition-colors hover:border-primary">
-                  <CardContent className="flex items-center justify-between py-4">
-                    <div>
-                      <p className="font-medium">
-                        {r.clinic.name} {r.clinic.verified ? <Badge variant="secondary">Verified</Badge> : null}
-                      </p>
-                      <p className="text-sm text-muted-foreground">{r.trialTitle}</p>
-                      {r.status === "pending" ? (
-                        <p className="text-xs text-muted-foreground">{expiresText(r.expiresAt)}</p>
-                      ) : null}
-                    </div>
-                    <Badge variant={STATUS_VARIANT[r.status] ?? "muted"}>{STATUS_LABEL[r.status] ?? r.status}</Badge>
-                  </CardContent>
-                </Card>
+              <Link
+                key={r.id}
+                href={`/app/inbox/${r.id}`}
+                className="group flex flex-wrap items-center justify-between gap-4 rounded-[24px] bg-white p-6 shadow-card transition-shadow hover:shadow-pop focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-tc-primary-soft"
+              >
+                <div className="min-w-0">
+                  <p className="flex flex-wrap items-center gap-2 text-[1.15rem] font-bold text-tc-ink">
+                    {r.clinic.name} {r.clinic.verified ? <Badge variant="secondary">Verified</Badge> : null}
+                  </p>
+                  <p className="mt-1 text-[1.05rem] text-tc-ink-2">{r.trialTitle}</p>
+                  {r.status === "pending" ? (
+                    <p className="mt-1 text-[0.95rem] font-semibold text-tc-warning-ink">{expiresText(r.expiresAt)}</p>
+                  ) : null}
+                </div>
+                <span className="flex items-center gap-3">
+                  <Badge variant={STATUS_VARIANT[r.status] ?? "muted"}>{STATUS_LABEL[r.status] ?? r.status}</Badge>
+                  <ArrowRight className="size-5 text-tc-primary-ink transition-transform group-hover:translate-x-0.5" aria-hidden />
+                </span>
               </Link>
             ))}
           </div>
         )}
-      </div>
+      </PageBody>
     </main>
   );
 }

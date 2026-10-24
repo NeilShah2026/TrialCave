@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { Download, PencilLine } from "lucide-react";
 
 import { PatientNav } from "@/components/patient-nav";
+import { PageBody, PageHero } from "@/components/page-hero";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { getMyPatient, getSessionUser } from "@/lib/auth";
@@ -19,19 +21,29 @@ export default async function PrivacyPage() {
   return (
     <main className="flex-1">
       <PatientNav email={user?.email ?? ""} />
-      <div className="mx-auto max-w-[800px] px-4 py-8">
-        <h1 className="text-2xl font-semibold">Your data, your control</h1>
-        <p className="mt-1 text-muted-foreground">
-          Download, correct, delete, or withdraw your data at any time. Read the full{" "}
-          <Link href="/legal/privacy" className="text-primary hover:underline">Privacy Notice</Link>.
-        </p>
-
-        <div className="mt-6 space-y-4">
+      <PageHero
+        kicker="Privacy controls"
+        title="Your data, your control"
+        width="narrow"
+        lede={
+          <>
+            Download, correct, delete, or withdraw your data at any time. Read the full{" "}
+            <Link href="/legal/privacy" className="font-bold text-tc-mint underline-offset-4 hover:underline">Privacy Notice</Link>.
+          </>
+        }
+      />
+      <PageBody width="narrow">
+        <div className="space-y-6">
           <Card>
-            <CardContent className="flex flex-wrap items-center justify-between gap-3 pt-6">
-              <div>
-                <h2 className="text-lg font-semibold">Download my data</h2>
-                <p className="text-sm text-muted-foreground">A full JSON copy of everything TrialCave holds about you.</p>
+            <CardContent className="flex flex-wrap items-center justify-between gap-4 pt-6 sm:pt-7">
+              <div className="flex items-start gap-3">
+                <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-tc-primary-soft text-tc-primary-ink">
+                  <Download className="size-5" aria-hidden />
+                </span>
+                <div>
+                  <h2 className="text-[1.15rem] font-bold">Download my data</h2>
+                  <p className="text-[1rem] text-tc-ink-2">A full JSON copy of everything TrialCave holds about you.</p>
+                </div>
               </div>
               <Button asChild variant="outline">
                 {/* Plain link: the route returns a file download. */}
@@ -41,10 +53,15 @@ export default async function PrivacyPage() {
           </Card>
 
           <Card>
-            <CardContent className="flex flex-wrap items-center justify-between gap-3 pt-6">
-              <div>
-                <h2 className="text-lg font-semibold">Correct my data</h2>
-                <p className="text-sm text-muted-foreground">Edit or remove any item in your health profile. Changes are recorded.</p>
+            <CardContent className="flex flex-wrap items-center justify-between gap-4 pt-6 sm:pt-7">
+              <div className="flex items-start gap-3">
+                <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-tc-primary-soft text-tc-primary-ink">
+                  <PencilLine className="size-5" aria-hidden />
+                </span>
+                <div>
+                  <h2 className="text-[1.15rem] font-bold">Correct my data</h2>
+                  <p className="text-[1rem] text-tc-ink-2">Edit or remove any item in your health profile. Changes are recorded.</p>
+                </div>
               </div>
               <Button asChild variant="outline"><Link href="/app/profile">Open profile</Link></Button>
             </CardContent>
@@ -54,7 +71,7 @@ export default async function PrivacyPage() {
 
           <DeleteDataCard />
         </div>
-      </div>
+      </PageBody>
     </main>
   );
 }

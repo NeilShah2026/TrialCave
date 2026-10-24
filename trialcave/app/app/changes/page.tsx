@@ -3,12 +3,14 @@ import { format } from "date-fns";
 import { ArrowRight } from "lucide-react";
 
 import { PatientNav } from "@/components/patient-nav";
+import { PageBody, PageHero } from "@/components/page-hero";
+import { PILL_VARIANT } from "@/components/match-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { getMyPatient, getSessionUser } from "@/lib/auth";
 import { loadAllChanges } from "@/lib/patient";
-import { STATUS_LABEL, STATUS_VARIANT } from "@/lib/match-status";
+import { STATUS_LABEL } from "@/lib/match-status";
 import type { MatchStatus } from "@/lib/matching/types";
 import { MarkSeen } from "./mark-seen";
 
@@ -24,7 +26,7 @@ const CRITERION_WORD: Record<string, string> = {
 
 function StatusChip({ s }: { s: MatchStatus | null }) {
   if (!s) return <Badge variant="muted">Not listed</Badge>;
-  return <Badge variant={STATUS_VARIANT[s]}>{STATUS_LABEL[s]}</Badge>;
+  return <Badge variant={PILL_VARIANT[s]}>{STATUS_LABEL[s]}</Badge>;
 }
 
 export default async function ChangesPage() {
@@ -45,57 +47,66 @@ export default async function ChangesPage() {
     <main className="flex-1">
       <PatientNav email={user?.email ?? ""} />
       {unseenIds.length ? <MarkSeen ids={unseenIds} /> : null}
-      <div className="mx-auto max-w-[800px] px-4 py-8">
-        <h1 className="text-2xl font-semibold">What changed</h1>
-        <p className="mt-1 text-muted-foreground">Every time your profile changes, we re-check every trial and show what moved.</p>
+      <PageHero
+        title="What changed"
+        lede="Every time your profile changes, we re-check every trial and show what moved."
+        width="narrow"
+      />
+      <PageBody width="narrow">
         {changes.length === 0 ? (
-          <div className="mt-6 rounded-2xl border border-dashed border-border bg-card p-8 text-center text-muted-foreground">
-            <p>No changes yet. Add a record or answer a question to see your matches update.</p>
-            <Button asChild size="sm" className="mt-3"><Link href="/app/records">Add a record</Link></Button>
-          </div>
+          <Card>
+            <CardContent className="pt-8 text-center sm:pt-8">
+              <p className="text-[1.05rem] text-tc-ink-2">No changes yet. Add a record or answer a question to see your matches update.</p>
+              <Button asChild className="mt-4"><Link href="/app/records">Add a record</Link></Button>
+            </CardContent>
+          </Card>
         ) : (
-          <div className="mt-6 space-y-6">
+          <div className="space-y-10">
             {[...groups.values()].map((rows) => (
               <section key={rows[0].id} aria-label={rows[0].triggerLabel}>
-                <h2 className="font-medium">
+                <h2 className="flex flex-wrap items-center gap-2 text-[1.45rem] font-extrabold tracking-tight">
                   {rows[0].triggerLabel}
-                  {rows.some((r) => !r.seenAt) ? <Badge className="ml-2" variant="default">New</Badge> : null}
+                  {rows.some((r) => !r.seenAt) ? <Badge variant="default">New</Badge> : null}
                 </h2>
-                <p className="text-xs text-muted-foreground">
+                <p className="mt-1 text-[0.95rem] text-tc-muted">
                   {format(new Date(rows[0].createdAt), "MMM d, yyyy")} · {rows.length} trial{rows.length === 1 ? "" : "s"} changed
                 </p>
-                <div className="mt-2 space-y-2">
+                <div className="mt-4 space-y-3">
                   {rows.slice(0, 25).map((c) => (
                     <Card key={c.id}>
-                      <CardContent className="py-4">
-                        <Link href={`/app/matches/${c.trialId}`} className="font-medium hover:underline">
+                      <CardContent className="pt-6">
+                        <Link href={`/app/matches/${c.trialId}`} className="text-[1.15rem] font-bold text-tc-ink hover:text-tc-primary-ink hover:underline">
                           {c.trialTitle}
                         </Link>
-                        <p className="mt-1 flex flex-wrap items-center gap-2 text-sm">
+                        <p className="mt-3 flex flex-wrap items-center gap-2">
                           <StatusChip s={c.fromStatus} />
-                          <ArrowRight className="size-4 text-muted-foreground" aria-label="changed to" />
+                          <ArrowRight className="size-5 text-tc-muted" aria-label="changed to" />
                           <StatusChip s={c.toStatus} />
                         </p>
-                        {c.changedCriteria.slice(0, 4).map((cc) => (
-                          <p key={cc.criterionId} className="mt-1 text-sm text-muted-foreground">
-                            <span className="text-foreground">{cc.plainText}</span>:{" "}
-                            {cc.from ? `${CRITERION_WORD[cc.from] ?? cc.from} → ` : ""}
-                            {CRITERION_WORD[cc.to] ?? cc.to}
-                            {cc.reason ? `. ${cc.reason}` : ""}
-                          </p>
-                        ))}
+                        {c.changedCriteria.length > 0 ? (
+                          <ul className="mt-3">
+                            {c.changedCriteria.slice(0, 4).map((cc) => (
+                              <li key={cc.criterionId} className="border-t border-tc-border py-2 text-[1rem] text-tc-ink-2">
+                                <span className="font-bold text-tc-ink">{cc.plainText}</span>:{" "}
+                                {cc.from ? `${CRITERION_WORD[cc.from] ?? cc.from} → ` : ""}
+                                {CRITERION_WORD[cc.to] ?? cc.to}
+                                {cc.reason ? `. ${cc.reason}` : ""}
+                              </li>
+                            ))}
+                          </ul>
+                        ) : null}
                       </CardContent>
                     </Card>
                   ))}
                   {rows.length > 25 ? (
-                    <p className="text-sm text-muted-foreground">And {rows.length - 25} more. See them all in your matches.</p>
+                    <p className="text-[1rem] text-tc-ink-2">And {rows.length - 25} more. See them all in your matches.</p>
                   ) : null}
                 </div>
               </section>
             ))}
           </div>
         )}
-      </div>
+      </PageBody>
     </main>
   );
 }

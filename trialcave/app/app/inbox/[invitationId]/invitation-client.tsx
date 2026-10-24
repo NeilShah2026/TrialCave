@@ -81,9 +81,11 @@ export function InvitationClient({
 
   if (status === "approved") {
     return (
-      <div className="space-y-3">
-        <p className="text-sm">You approved this invitation. {clinicName} can see:</p>
-        <p className="text-sm text-muted-foreground">{sharedFields.map(shareFieldLabel).join(", ") || "nothing"}</p>
+      <div className="space-y-4">
+        <p className="rounded-2xl bg-tc-success-soft px-5 py-4 text-[1.05rem] font-semibold text-tc-success-ink">
+          You approved this invitation. {clinicName} can see:
+        </p>
+        <p className="text-[1.05rem] text-tc-ink-2">{sharedFields.map(shareFieldLabel).join(", ") || "nothing"}</p>
         <Button variant="outline" onClick={stop} disabled={pending}>
           {pending ? "Stopping…" : "Stop sharing"}
         </Button>
@@ -91,37 +93,48 @@ export function InvitationClient({
     );
   }
   if (status !== "pending") {
-    return <p className="text-sm text-muted-foreground">{STATUS_TEXT[status] ?? `This invitation is ${status}.`}</p>;
+    return (
+      <p className="rounded-2xl bg-tc-mist px-5 py-4 text-[1.05rem] font-semibold text-tc-ink-2">
+        {STATUS_TEXT[status] ?? `This invitation is ${status}.`}
+      </p>
+    );
   }
 
   return (
     <div>
-      <h2 className="text-sm font-semibold">If you approve, they will see:</h2>
-      <fieldset className="mt-2 grid gap-2 sm:grid-cols-2">
+      <h2 className="text-[1.45rem] font-extrabold tracking-tight">If you approve, they will see:</h2>
+      <fieldset className="mt-4 grid gap-3 sm:grid-cols-2">
         <legend className="sr-only">Fields to share</legend>
         {SHARE_FIELDS.map((f) => (
-          <label key={f.key} className="flex items-center gap-3 text-sm">
+          <label
+            key={f.key}
+            className="flex min-h-[3.25rem] cursor-pointer items-center gap-3 rounded-2xl border-2 border-tc-border px-4 py-3 text-[1.05rem] text-tc-ink has-[:checked]:border-tc-primary has-[[data-state=checked]]:border-tc-primary"
+          >
             <Checkbox checked={Boolean(shared[f.key])} onCheckedChange={(v) => setShared((s) => ({ ...s, [f.key]: Boolean(v) }))} />
-            <span>{f.label}</span>
+            <span className="font-semibold">{f.label}</span>
             {f.sensitive ? (
-              <Badge variant="muted" className="gap-1"><Lock className="size-3" aria-hidden /> Sensitive</Badge>
+              <Badge variant="muted" className="ml-auto"><Lock className="size-3.5" aria-hidden /> Sensitive</Badge>
             ) : null}
           </label>
         ))}
       </fieldset>
       {shared.phone ? (
-        <div className="mt-3 max-w-xs space-y-1.5">
+        <div className="mt-4 max-w-sm space-y-2">
           <Label htmlFor="invite-phone">Phone number</Label>
           <Input id="invite-phone" type="tel" autoComplete="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />
         </div>
       ) : null}
-      {!hasContact ? <p className="mt-2 text-sm text-tc-danger">Pick email or phone so the clinic can reach you.</p> : null}
+      {!hasContact ? (
+        <p className="mt-4 rounded-2xl bg-tc-danger-soft px-5 py-4 text-[1rem] font-semibold text-tc-danger-ink" role="alert">
+          Pick email or phone so the clinic can reach you.
+        </p>
+      ) : null}
 
-      <div className="mt-4 flex flex-wrap gap-2">
-        <Button onClick={() => respond("approve")} disabled={pending || !hasContact}>
+      <div className="mt-6 flex flex-wrap gap-3">
+        <Button size="lg" onClick={() => respond("approve")} disabled={pending || !hasContact}>
           {pending ? "Saving…" : "Approve & share"}
         </Button>
-        <Button variant="outline" onClick={() => respond("decline")} disabled={pending}>Not interested</Button>
+        <Button size="lg" variant="outline" onClick={() => respond("decline")} disabled={pending}>Not interested</Button>
         <Button variant="ghost" onClick={() => respond("mute")} disabled={pending}>Don&apos;t show invites from this clinic</Button>
       </div>
     </div>

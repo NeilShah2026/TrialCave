@@ -34,11 +34,12 @@ export function ApplicationActions({ applicationId, current }: { applicationId: 
   }
 
   return (
-    <div className="flex flex-wrap gap-2" role="group" aria-label="Application status">
+    <div className="flex flex-wrap gap-3" role="group" aria-label="Application status">
       {OPTIONS.map((o) => (
         <Button
           key={o.value}
-          variant={current === o.value ? "default" : o.value === "not_a_fit" ? "ghost" : "outline"}
+          variant={current === o.value ? "secondary" : "outline"}
+          className={current === o.value ? "disabled:opacity-100" : o.value === "not_a_fit" ? "hover:border-tc-danger-ink hover:text-tc-danger-ink" : undefined}
           aria-pressed={current === o.value}
           disabled={pending || current === o.value}
           onClick={() => set(o.value, o.done)}

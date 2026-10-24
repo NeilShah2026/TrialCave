@@ -7,10 +7,11 @@ export const STATUS_LABEL: Record<MatchStatus, string> = {
   ineligible: "Not eligible",
 };
 
-export const STATUS_VARIANT: Record<MatchStatus, "success" | "warning" | "secondary" | "danger"> = {
+/** Design v3 pill colors: fit = sage, possible = teal, unknown = amber, not a fit = coral. */
+export const STATUS_VARIANT: Record<MatchStatus, "success" | "teal" | "warning" | "danger"> = {
   strong: "success",
-  possible: "warning",
-  needs_info: "secondary",
+  possible: "teal",
+  needs_info: "warning",
   ineligible: "danger",
 };
 

@@ -1,56 +1,73 @@
 @import "tailwindcss";
 
 /*
-  TrialCave design system (B14.1).
-  Vault Teal primary, Soft Indigo clinic accents, Warm Sand donor highlights,
-  Sage/Amber/Coral for pass/unknown/fail. Light theme only for the demo.
+  TrialCave design system, v3 ("night teal").
+  Matches the homepage prototype: Atkinson Hyperlegible Next, ink text, Vault
+  Teal actions, Mint highlights on Night surfaces, Mist page backgrounds, and
+  Sage / Amber / Coral for pass / unknown / fail. Large type and 48px+ targets.
 */
 
 :root {
   --radius: 1rem;
 
-  /* Brand + surface tokens (B14.1) */
+  /* Palette */
+  --tc-ink: #1f2a44;
+  --tc-ink-2: #444e63;
+  --tc-muted: #5c6577;
   --tc-primary: #2f7d7a; /* Vault Teal */
-  --tc-primary-soft: #e6f2f1;
-  --tc-secondary: #5b6cb8; /* Soft Indigo */
-  --tc-secondary-soft: #eceef8;
+  --tc-primary-ink: #23605d;
+  --tc-primary-soft: #e3f0ef;
+  --tc-mint: #8fe3da;
+  --tc-night: #0d2624;
+  --tc-night-2: #153634;
+  --tc-night-line: #2f5e5a;
+  --tc-night-text: #c3d7d4;
+  --tc-mist: #f2f5f4;
+  --tc-border: #dde3e1;
   --tc-accent: #e9dcc7; /* Warm Sand */
+  --tc-secondary: #4d5ea8; /* Indigo */
+  --tc-secondary-soft: #eceef8;
   --tc-success: #5e9c63; /* Sage */
+  --tc-success-ink: #3d7042;
+  --tc-success-soft: #e6f1e7;
   --tc-warning: #c9922e; /* Amber */
-  --tc-danger: #c0614f; /* Muted Coral */
-  --tc-bg: #f7f8fa;
+  --tc-warning-ink: #835a10;
+  --tc-warning-soft: #fbf3e3;
+  --tc-danger: #c0614f; /* Coral */
+  --tc-danger-ink: #9c4434;
+  --tc-danger-soft: #f6e8e5;
   --tc-surface: #ffffff;
-  --tc-text: #1f2a44;
-  --tc-muted: #6b7280;
-  --tc-border: #e3e6ec;
+  --tc-text: var(--tc-ink);
 
   /* shadcn semantic mapping */
-  --background: var(--tc-bg);
-  --foreground: var(--tc-text);
+  --background: var(--tc-mist);
+  --foreground: var(--tc-ink);
   --card: var(--tc-surface);
-  --card-foreground: var(--tc-text);
+  --card-foreground: var(--tc-ink);
   --popover: var(--tc-surface);
-  --popover-foreground: var(--tc-text);
+  --popover-foreground: var(--tc-ink);
   --primary: var(--tc-primary);
   --primary-foreground: #ffffff;
   --secondary: var(--tc-secondary);
   --secondary-foreground: #ffffff;
-  --muted: var(--tc-primary-soft);
+  --muted: var(--tc-mist);
   --muted-foreground: var(--tc-muted);
   --accent: var(--tc-accent);
-  --accent-foreground: var(--tc-text);
-  --destructive: var(--tc-danger);
+  --accent-foreground: var(--tc-ink);
+  --destructive: var(--tc-danger-ink);
   --destructive-foreground: #ffffff;
   --border: var(--tc-border);
-  --input: var(--tc-border);
+  --input: #c9d1cf;
   --ring: var(--tc-primary);
 }
 
 @theme inline {
-  --radius-sm: calc(var(--radius) - 8px);
-  --radius-md: calc(var(--radius) - 4px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 0.875rem;
+  --radius-xl: 1.125rem;
+  --radius-2xl: 1.5rem;
+  --radius-3xl: 1.75rem;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -72,23 +89,52 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-  /* TrialCave-specific status colors, usable as e.g. text-tc-success */
+  /* TrialCave tokens, usable as e.g. text-tc-success, bg-tc-night */
+  --color-tc-ink: var(--tc-ink);
+  --color-tc-ink-2: var(--tc-ink-2);
+  --color-tc-text: var(--tc-ink);
   --color-tc-primary: var(--tc-primary);
+  --color-tc-primary-ink: var(--tc-primary-ink);
   --color-tc-primary-soft: var(--tc-primary-soft);
+  --color-tc-mint: var(--tc-mint);
+  --color-tc-night: var(--tc-night);
+  --color-tc-night-2: var(--tc-night-2);
+  --color-tc-night-line: var(--tc-night-line);
+  --color-tc-night-text: var(--tc-night-text);
+  --color-tc-mist: var(--tc-mist);
   --color-tc-secondary: var(--tc-secondary);
   --color-tc-secondary-soft: var(--tc-secondary-soft);
   --color-tc-accent: var(--tc-accent);
   --color-tc-success: var(--tc-success);
+  --color-tc-success-ink: var(--tc-success-ink);
+  --color-tc-success-soft: var(--tc-success-soft);
   --color-tc-warning: var(--tc-warning);
+  --color-tc-warning-ink: var(--tc-warning-ink);
+  --color-tc-warning-soft: var(--tc-warning-soft);
   --color-tc-danger: var(--tc-danger);
+  --color-tc-danger-ink: var(--tc-danger-ink);
+  --color-tc-danger-soft: var(--tc-danger-soft);
   --color-tc-surface: var(--tc-surface);
   --color-tc-muted: var(--tc-muted);
   --color-tc-border: var(--tc-border);
 
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-atkinson), ui-sans-serif, system-ui, sans-serif;
+
+  --shadow-card: 0 1px 0 var(--tc-border), 0 30px 60px -40px rgba(13, 38, 36, 0.35);
+  --shadow-pop: 0 20px 40px -16px rgba(13, 38, 36, 0.4), 0 0 0 1px var(--tc-border);
 }
 
 @layer base {
+  /* Hyperlegible sizing: everything in rem scales up from a 17px root. */
+  html {
+    font-size: 17px;
+    -webkit-text-size-adjust: 100%;
+  }
+  @media (min-width: 1600px) {
+    html {
+      font-size: 18px;
+    }
+  }
   * {
     border-color: var(--border);
   }
@@ -96,5 +142,43 @@
     background: var(--background);
     color: var(--foreground);
     font-family: var(--font-sans);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1,
+  h2,
+  h3 {
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+  }
+  :focus-visible {
+    outline: 3px solid var(--tc-primary);
+    outline-offset: 3px;
+  }
+  .on-dark :focus-visible {
+    outline-color: var(--tc-mint);
+  }
+  ::selection {
+    background: var(--tc-mint);
+    color: var(--tc-night);
+  }
+}
+
+@layer components {
+  /* Page title used across app pages. */
+  .tc-title {
+    font-size: clamp(1.9rem, 3vw, 2.6rem);
+    line-height: 1.08;
+    font-weight: 800;
+    letter-spacing: -0.025em;
+  }
+  .tc-lede {
+    font-size: 1.1rem;
+    color: var(--tc-ink-2);
+  }
+  .tc-kicker {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--tc-primary-ink);
   }
 }
