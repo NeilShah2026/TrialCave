@@ -77,6 +77,9 @@ export interface Clinic {
   ownerUserId: string;
   name: string;
   verified: boolean;
+  town: string;
+  lat: number;
+  lon: number;
 }
 
 export async function getMyClinic(): Promise<Clinic> {
@@ -84,7 +87,7 @@ export async function getMyClinic(): Promise<Clinic> {
   const admin = createAdminClient();
   const { data } = await admin
     .from("clinics")
-    .select("id, owner_user_id, name, verified")
+    .select("id, owner_user_id, name, verified, town, lat, lon")
     .eq("owner_user_id", user.userId)
     .maybeSingle();
 
@@ -96,6 +99,9 @@ export async function getMyClinic(): Promise<Clinic> {
     ownerUserId: data.owner_user_id,
     name: data.name,
     verified: data.verified,
+    town: data.town,
+    lat: data.lat,
+    lon: data.lon,
   };
 }
 
