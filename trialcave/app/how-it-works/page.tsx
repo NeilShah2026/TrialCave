@@ -1,7 +1,7 @@
 import { PublicHeader } from "@/components/public-header";
 import { Card, CardContent } from "@/components/ui/card";
 
-export const metadata = { title: "How it works · TrialCave" };
+export const metadata = { title: "How it works" };
 
 const PROMISES = [
   { title: "Your data", body: "See everything TrialCave holds, download a copy, correct it, or delete it anytime." },
@@ -66,6 +66,55 @@ export default function HowItWorksPage() {
             Paychecks only ever come from data with real provenance — connected devices and
             documents on file. Typed-in answers help you find trials but never earn money, so
             there&apos;s no reason to fake data.
+          </p>
+        </section>
+
+        <section className="mt-8">
+          <h3 className="text-base font-semibold">Enclave protection layers</h3>
+          <div className="mt-2 overflow-x-auto">
+            <table className="w-full min-w-[480px] text-left text-sm">
+              <caption className="sr-only">How the Enclave protects Donors</caption>
+              <thead>
+                <tr className="border-b border-border">
+                  <th scope="col" className="py-2 pr-3 font-medium">Layer</th>
+                  <th scope="col" className="py-2 font-medium">What it does</th>
+                </tr>
+              </thead>
+              <tbody className="text-muted-foreground">
+                {[
+                  ["Consent filter", "Only Donors who allowed that data type and research type are included."],
+                  ["De-identification", "No names, contact details, towns, or exact dates go into an analysis."],
+                  ["Approved analyses only", "Researchers pick from predefined analyses approved for their project."],
+                  ["Small-group hiding", "Any group under 10 people is hidden from every result."],
+                  ["Aggregate export only", "Only group tables can leave. Raw-record download is disabled and logged."],
+                  ["Audit trail", "Every run and export is recorded."],
+                ].map(([l, d]) => (
+                  <tr key={l} className="border-b border-border last:border-0">
+                    <th scope="row" className="py-2 pr-3 font-normal text-foreground">{l}</th>
+                    <td className="py-2">{d}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section className="mt-8">
+          <h2 className="text-xl font-semibold">Your consent controls</h2>
+          <ul className="mt-2 list-inside list-disc space-y-1 text-sm text-muted-foreground">
+            <li>Turn clinic invitations on or off, and pick which conditions, in Settings.</li>
+            <li>Choose each data type and research type for your donation. Everything starts off.</li>
+            <li>Every choice you make is recorded with the exact text you agreed to.</li>
+            <li>Download, correct, or delete your data, or withdraw from research, from Privacy controls.</li>
+          </ul>
+        </section>
+
+        <section className="mt-8">
+          <h2 className="text-xl font-semibold">Scans and imaging</h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            You can donate scans you already have. We never offer compensation for scans that use
+            radiation or contrast dye. Partner imaging is on our roadmap and will be limited to MRI,
+            ultrasound, retinal photos, and skin photos, ordered under an IRB-approved protocol.
           </p>
         </section>
 

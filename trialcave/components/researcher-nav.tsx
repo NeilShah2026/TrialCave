@@ -1,7 +1,8 @@
-import Link from "next/link";
-
 import { Brand } from "@/components/brand";
+import { NavLinks, type NavLink } from "@/components/nav-links";
 import { SignOutButton } from "@/components/sign-out-button";
+
+const LINKS: NavLink[] = [{ href: "/enclave", label: "Projects" }];
 
 export function ResearcherNav({ email, orgName }: { email: string; orgName?: string }) {
   return (
@@ -11,9 +12,9 @@ export function ResearcherNav({ email, orgName }: { email: string; orgName?: str
           <Brand href="/enclave" />
           {orgName ? <span className="text-sm text-muted-foreground">{orgName}</span> : null}
         </div>
+        <NavLinks links={LINKS} label="Researcher" />
         <div className="flex items-center gap-3">
-          <Link href="/enclave" className="rounded-md px-3 py-1.5 text-sm hover:bg-muted">Projects</Link>
-          <span className="hidden text-sm text-muted-foreground sm:inline">{email}</span>
+          <span className="hidden text-sm text-muted-foreground lg:inline">{email}</span>
           <SignOutButton />
         </div>
       </div>

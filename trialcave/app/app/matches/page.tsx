@@ -6,6 +6,7 @@ import { loadMatches } from "@/lib/patient";
 import type { MatchStatus } from "@/lib/matching/types";
 
 export const dynamic = "force-dynamic";
+export const metadata = { title: "My matches" };
 
 const TAB_STATUS: { value: string; label: string; status: MatchStatus }[] = [
   { value: "strong", label: "Strong", status: "strong" },
@@ -20,6 +21,8 @@ export default async function MatchesPage() {
   const matches = await loadMatches(patient.id);
 
   const byStatus = (s: MatchStatus) => matches.filter((m) => m.status === s);
+  // Open the first group that has trials in it.
+  const defaultTab = TAB_STATUS.find((t) => byStatus(t.status).length > 0)?.value ?? "strong";
 
   return (
     <main className="flex-1">
@@ -30,8 +33,8 @@ export default async function MatchesPage() {
           {matches.length} recruiting trials checked against your profile.
         </p>
 
-        <Tabs defaultValue="strong" className="mt-6">
-          <TabsList>
+        <Tabs defaultValue={defaultTab} className="mt-6">
+          <TabsList className="h-auto flex-wrap">
             {TAB_STATUS.map((t) => (
               <TabsTrigger key={t.value} value={t.value}>
                 {t.label} ({byStatus(t.status).length})

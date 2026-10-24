@@ -184,6 +184,10 @@ there's no real data in it. You can run it any time to get a fresh, empty databa
 > **If it breaks:** If it complains it can't find the database, make sure
 > `supabase start` (step 4) finished successfully first.
 
+> **Already set up before?** A security migration was added
+> (`0004_profile_role_guard.sql`, stops users from changing their own role).
+> Local: `supabase db reset`. Cloud: `supabase db push`.
+
 ---
 
 ## 6. (Optional) Add an Anthropic API key for AI features
@@ -312,6 +316,8 @@ If you'd rather use a free hosted database instead of Docker:
 | Page is blank / won't load | Is `npm run dev` still running in a terminal? It must stay running. Check the terminal for errors. |
 | Changed `.env.local` but nothing changed | Stop (`Ctrl + C`) and restart `npm run dev`. Settings load at startup. |
 | AI features error out | You need an `ANTHROPIC_API_KEY` (step 6). The core demo still works without it. |
+| Windows: "running scripts is disabled" when you type `npm` | Use `npm.cmd` instead (for example `npm.cmd run dev`), or run `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` once. |
+| New study: "Parse with AI" isn't available | Without an AI key, use **Write the checklist by hand** in step 2. Each row can be checked automatically or asked as a yes/no question. |
 
 ---
 

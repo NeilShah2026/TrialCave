@@ -9,7 +9,10 @@ import { OnboardingWizard } from "./onboarding-wizard";
 
 export const dynamic = "force-dynamic";
 
-export default async function OnboardingPage() {
+export const metadata = { title: "Set up your profile" };
+
+export default async function OnboardingPage({ searchParams }: { searchParams: Promise<{ path?: string }> }) {
+  const { path } = await searchParams;
   const user = await getSessionUser();
   if (!user) redirect("/login");
   if (user.role !== "patient") redirect("/");
@@ -29,7 +32,8 @@ export default async function OnboardingPage() {
       <section className="mx-auto max-w-lg px-4 py-6">
         <Card>
           <CardContent className="pt-6">
-            <OnboardingWizard towns={TOWN_NAMES} defaultName={profile?.full_name ?? ""} />
+            <h1 className="mb-4 text-2xl font-semibold">Set up your TrialCave profile</h1>
+            <OnboardingWizard towns={TOWN_NAMES} defaultName={profile?.full_name ?? ""} donorPath={path === "donor"} />
           </CardContent>
         </Card>
       </section>

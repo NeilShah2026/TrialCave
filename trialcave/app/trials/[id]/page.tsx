@@ -10,8 +10,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { CriteriaList } from "@/components/criteria-list";
 import { categoryLabel } from "@/lib/categories";
 import { getTrialDetail } from "@/lib/trials";
+import { getSessionUser } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
+export const metadata = { title: "Trial details" };
 
 export default async function TrialDetailPage({
   params,
@@ -19,7 +21,7 @@ export default async function TrialDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const detail = await getTrialDetail(id);
+  const [detail, user] = await Promise.all([getTrialDetail(id), getSessionUser().catch(() => null)]);
   if (!detail) notFound();
 
   const { trial, criteria } = detail;
@@ -133,12 +135,34 @@ export default async function TrialDetailPage({
 
         <Card className="mt-6">
           <CardContent className="pt-6 text-center">
-            <p className="text-sm text-muted-foreground">
-              Sign in to see if you qualify, criterion by criterion.
-            </p>
-            <Button asChild className="mt-3">
-              <Link href="/login">Sign in</Link>
-            </Button>
+            {user?.role === "patient" ? (
+              <>
+                <p className="text-sm text-muted-foreground">
+                  See how your own records compare with this trial, criterion by criterion.
+                </p>
+                <Button asChild className="mt-3">
+                  <Link href={`/app/matches/${id}`}>Check my eligibility</Link>
+                </Button>
+              </>
+            ) : user ? (
+              <p className="text-sm text-muted-foreground">
+                Eligibility checks are available to patient accounts.
+              </p>
+            ) : (
+              <>
+                <p className="text-sm text-muted-foreground">
+                  Sign in to see if you qualify, criterion by criterion. It&apos;s free.
+                </p>
+                <div className="mt-3 flex flex-wrap justify-center gap-2">
+                  <Button asChild>
+                    <Link href={`/login?next=/app/matches/${id}`}>Sign in</Link>
+                  </Button>
+                  <Button asChild variant="outline">
+                    <Link href="/signup">Create an account</Link>
+                  </Button>
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
       </div>

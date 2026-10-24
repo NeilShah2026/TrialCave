@@ -6,6 +6,7 @@ import { getMyClinic, getSessionUser } from "@/lib/auth";
 import { NewStudyWizard } from "./new-study-wizard";
 
 export const dynamic = "force-dynamic";
+export const metadata = { title: "New study" };
 
 export default async function NewStudyPage() {
   const user = await getSessionUser();
@@ -20,7 +21,7 @@ export default async function NewStudyPage() {
         </Link>
         <h1 className="mt-3 text-2xl font-semibold">New study</h1>
         <div className="mt-6">
-          <NewStudyWizard />
+          <NewStudyWizard clinicName={clinic.name} verified={clinic.verified} />
         </div>
       </div>
     </main>

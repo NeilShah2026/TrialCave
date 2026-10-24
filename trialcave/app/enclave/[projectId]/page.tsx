@@ -8,16 +8,21 @@ import { Card, CardContent } from "@/components/ui/card";
 import { getMyResearchPartner, getSessionUser, assertApprovedProjectOwner } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { eligibleDonorPool, ANALYSIS_META } from "@/lib/enclave/run";
-import type { AnalysisKey } from "@/lib/enclave/analyses";
+import { K_MIN, type AnalysisKey } from "@/lib/enclave/analyses";
 import { WorkspaceClient } from "./workspace-client";
 
 export const dynamic = "force-dynamic";
+export const metadata = { title: "Enclave workspace" };
 
 export default async function WorkspacePage({ params }: { params: Promise<{ projectId: string }> }) {
   const { projectId } = await params;
   const user = await getSessionUser();
   const partner = await getMyResearchPartner();
-  await assertApprovedProjectOwner(partner.id, projectId);
+  try {
+    await assertApprovedProjectOwner(partner.id, projectId);
+  } catch {
+    notFound();
+  }
   const admin = createAdminClient();
 
   const { data: project } = await admin
@@ -51,23 +56,39 @@ export default async function WorkspacePage({ params }: { params: Promise<{ proj
         <p className="mt-1 text-sm text-muted-foreground">Eligible Donor pool: {pool.count}</p>
 
         <div className="mt-6">
-          <WorkspaceClient projectId={projectId} analyses={analyses} />
+          <WorkspaceClient projectId={projectId} analyses={analyses} kMin={K_MIN} />
         </div>
 
-        {runs && runs.length > 0 ? (
-          <Card className="mt-6">
-            <CardContent className="pt-6">
-              <h2 className="text-lg font-semibold">Run history</h2>
-              <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
-                {runs.map((r) => (
-                  <li key={r.id}>
-                    {format(new Date(r.created_at), "MMM d, HH:mm")} · {ANALYSIS_META[r.analysis_key as AnalysisKey]?.label ?? r.analysis_key} · {r.donor_count} donors · {r.suppressed_cells} hidden
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-        ) : null}
+        <Card className="mt-6">
+          <CardContent className="pt-6">
+            <h2 className="text-lg font-semibold">Run history</h2>
+            {runs && runs.length > 0 ? (
+              <table className="mt-2 w-full text-sm">
+                <caption className="sr-only">Recent runs</caption>
+                <thead>
+                  <tr className="border-b border-border text-left text-muted-foreground">
+                    <th scope="col" className="py-2">When</th>
+                    <th scope="col" className="py-2">Analysis</th>
+                    <th scope="col" className="py-2">Donors included</th>
+                    <th scope="col" className="py-2">Hidden groups</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {runs.map((r) => (
+                    <tr key={r.id} className="border-b border-border last:border-0">
+                      <td className="py-2">{format(new Date(r.created_at), "MMM d, h:mm a")}</td>
+                      <td className="py-2">{ANALYSIS_META[r.analysis_key as AnalysisKey]?.label ?? r.analysis_key}</td>
+                      <td className="py-2">{r.donor_count}</td>
+                      <td className="py-2">{r.suppressed_cells}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <p className="mt-1 text-sm text-muted-foreground">No runs yet.</p>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </main>
   );

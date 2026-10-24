@@ -27,7 +27,8 @@ describe("runAnalysis — suppression", () => {
     expect(band65.n).toBe(12);
     expect(band65.value).toBe(6000);
     expect(band65.suppressed).toBe(false);
-    expect(band80.n).toBe(3);
+    // The exact size of a hidden group is never revealed.
+    expect(band80.n).toBeNull();
     expect(band80.value).toBeNull(); // suppressed
     expect(band80.suppressed).toBe(true);
     expect(res.suppressedCells).toBe(1);
@@ -60,5 +61,28 @@ describe("runAnalysis — suppression", () => {
     // Only the 50–59 band has data; others are empty (n=0, not suppressed).
     expect(res.suppressedCells).toBe(0);
     expect(res.rows.find((r) => r.band === "50–59")!.value).toBe(7);
+  });
+});
+
+describe("runAnalysisWithContributors — payouts", () => {
+  it("only counts donors in shown groups as contributors", async () => {
+    const { runAnalysisWithContributors } = await import("@/lib/enclave/analyses");
+    const donors: DonorRow[] = [
+      ...Array.from({ length: 10 }, () => donor({ hba1c: 7.0, avgDailySteps: 6000 })),
+      ...Array.from({ length: 2 }, () => donor({ hba1c: 9.0, avgDailySteps: 5000 })),
+      donor({ hba1c: 7.0 }), // no steps: not used
+    ];
+    const { result, contributors } = runAnalysisWithContributors("steps_by_hba1c", donors);
+    expect(contributors).toHaveLength(10);
+    expect(result.donorCount).toBe(10);
+    expect(contributors.every((i) => i < 10)).toBe(true);
+  });
+
+  it("CSV never contains the size of a hidden group", async () => {
+    const { resultToCsv } = await import("@/lib/enclave/analyses");
+    const donors: DonorRow[] = Array.from({ length: 3 }, () => donor({ hba1c: 9.0, avgDailySteps: 5000 }));
+    const csv = resultToCsv(runAnalysis("steps_by_hba1c", donors));
+    expect(csv).toContain('"<10"');
+    expect(csv).not.toMatch(/,3,/);
   });
 });

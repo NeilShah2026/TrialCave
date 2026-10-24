@@ -2,6 +2,7 @@
 
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 import { LANGUAGES, type Language } from "@/lib/i18n/languages";
 import { setLanguage } from "@/app/app/language-actions";
@@ -14,8 +15,16 @@ export function LanguageSwitcher({ current }: { current: Language }) {
   function choose(lang: Language) {
     if (lang === current) return;
     startTransition(async () => {
-      await setLanguage(lang);
-      router.refresh();
+      try {
+        const res = await setLanguage(lang);
+        if (!res.ok) {
+          toast.error("Couldn't change the language.");
+          return;
+        }
+        router.refresh();
+      } catch {
+        toast.error("Couldn't change the language.");
+      }
     });
   }
 

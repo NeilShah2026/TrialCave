@@ -142,18 +142,21 @@ export function mapFacts(
         out.push(displayOnly(f.name, observedAt, f.sourceQuote));
         continue;
       }
+      // An explicit negative ("not on insulin", "denies insulin use") means the
+      // patient does NOT take it. Recording it as taking would wrongly exclude them.
+      const taking = !f.negated;
       for (const field of fields) {
         out.push({
           field,
           label: vocabLabel(field),
           valueNum: null,
-          valueBool: true,
+          valueBool: taking,
           valueText: null,
           unit: null,
           observedAt,
           sourceQuote: f.sourceQuote,
           warning: null,
-          comparison: compareTo(field, null, true, observedAt, currentMap),
+          comparison: compareTo(field, null, taking, observedAt, currentMap),
         });
       }
       continue;

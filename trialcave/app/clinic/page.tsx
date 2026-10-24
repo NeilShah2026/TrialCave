@@ -7,8 +7,10 @@ import { Badge } from "@/components/ui/badge";
 import { getMyClinic, getSessionUser } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { expireStaleInvitations } from "@/lib/outreach/invite";
+import { STUDY_STATUS_LABEL } from "@/lib/clinic-labels";
 
 export const dynamic = "force-dynamic";
+export const metadata = { title: "Your studies" };
 
 export default async function ClinicHome() {
   const user = await getSessionUser();
@@ -68,7 +70,7 @@ export default async function ClinicHome() {
                           Invited {c.invited} · Approved {c.approved} · Applications {c.applications}
                         </p>
                       </div>
-                      <Badge variant={s.study_status === "active" ? "success" : "muted"}>{s.study_status}</Badge>
+                      <Badge variant={s.study_status === "active" ? "success" : "muted"}>{STUDY_STATUS_LABEL[s.study_status] ?? s.study_status}</Badge>
                     </CardContent>
                   </Card>
                 </Link>

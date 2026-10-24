@@ -9,6 +9,21 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { expireStaleInvitations } from "@/lib/outreach/invite";
 
 export const dynamic = "force-dynamic";
+export const metadata = { title: "Inbox" };
+
+const STATUS_LABEL: Record<string, string> = {
+  pending: "New",
+  approved: "Sharing",
+  declined: "Declined",
+  expired: "Expired",
+  withdrawn: "Stopped sharing",
+};
+
+function expiresText(expiresAt: string): string {
+  const days = differenceInDays(new Date(expiresAt), new Date());
+  if (days <= 0) return "Expires today";
+  return `Expires in ${days} day${days === 1 ? "" : "s"}`;
+}
 
 const STATUS_VARIANT: Record<string, "warning" | "success" | "muted" | "danger"> = {
   pending: "warning",
@@ -52,7 +67,7 @@ export default async function InboxPage() {
         ) : (
           <div className="mt-6 space-y-3">
             {rows.map((r) => (
-              <Link key={r.id} href={`/app/inbox/${r.id}`} className="block">
+              <Link key={r.id} href={`/app/inbox/${r.id}`} className="block rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
                 <Card className="transition-colors hover:border-primary">
                   <CardContent className="flex items-center justify-between py-4">
                     <div>
@@ -61,12 +76,10 @@ export default async function InboxPage() {
                       </p>
                       <p className="text-sm text-muted-foreground">{r.trialTitle}</p>
                       {r.status === "pending" ? (
-                        <p className="text-xs text-muted-foreground">
-                          Expires in {Math.max(0, differenceInDays(new Date(r.expiresAt), new Date()))} days
-                        </p>
+                        <p className="text-xs text-muted-foreground">{expiresText(r.expiresAt)}</p>
                       ) : null}
                     </div>
-                    <Badge variant={STATUS_VARIANT[r.status]}>{r.status}</Badge>
+                    <Badge variant={STATUS_VARIANT[r.status] ?? "muted"}>{STATUS_LABEL[r.status] ?? r.status}</Badge>
                   </CardContent>
                 </Card>
               </Link>

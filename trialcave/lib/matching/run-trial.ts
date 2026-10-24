@@ -1,13 +1,11 @@
 import "server-only";
 
-import { runMatchesForAllPatients } from "@/lib/matching/run";
+import { runMatchesForTrial } from "@/lib/matching/run";
 
 /**
- * Re-match after a clinic saves/edits a study. The simplest correct approach is
- * to re-run all patients (silent); for the demo scale (~200 patients) this is
- * fast enough, and it keeps a single matching code path (B9.6).
+ * Re-match all patients against one study after a clinic saves or changes it
+ * (B9.6). Batch-loads patient inputs so it takes seconds at demo scale.
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function runMatchesForTrialLib(trialId: string): Promise<void> {
-  await runMatchesForAllPatients();
+  await runMatchesForTrial(trialId);
 }

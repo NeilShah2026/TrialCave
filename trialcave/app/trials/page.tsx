@@ -9,6 +9,7 @@ import { DEMO_MODE } from "@/lib/env";
 import { TrialFilters } from "./trial-filters";
 
 export const dynamic = "force-dynamic";
+export const metadata = { title: "Find a trial" };
 
 export default async function TrialsPage({
   searchParams,

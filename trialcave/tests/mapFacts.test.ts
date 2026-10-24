@@ -112,3 +112,29 @@ describe("mapFacts", () => {
     expect(older[0].comparison).toBe("older");
   });
 });
+
+describe("negated medications", () => {
+  it("'not on insulin' maps to med:insulin = false", async () => {
+    const { mapFacts } = await import("@/lib/ingest/mapFacts");
+    const out = mapFacts(
+      [
+        {
+          kind: "medication",
+          name: "Insulin",
+          icd10: null,
+          value: null,
+          valueText: null,
+          unit: null,
+          negated: true,
+          status: "unknown",
+          date: "2026-10-20",
+          sourceQuote: "Patient is not on insulin.",
+        },
+      ],
+      "2026-10-20",
+      [],
+    );
+    const insulin = out.find((f) => f.field === "med:insulin");
+    expect(insulin?.valueBool).toBe(false);
+  });
+});

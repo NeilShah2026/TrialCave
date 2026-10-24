@@ -79,3 +79,28 @@ describe("logistics and answers", () => {
     expect(evaluateCriterion(c, {}, no).status).toBe("fail");
   });
 });
+
+describe("type safety and wording", () => {
+  it("a value of the wrong type is unknown, never fail", () => {
+    const c = crit({ field: "hba1c_pct", operator: "gte", valueMin: 7 });
+    const r = evaluateCriterion(c, { hba1c_pct: fact("high") }, noAnswers);
+    expect(r.status).toBe("unknown");
+    const excl = crit({ kind: "exclusion", field: "med:insulin", operator: "present" });
+    expect(evaluateCriterion(excl, { "med:insulin": fact(7) }, noAnswers).status).toBe("unknown");
+  });
+
+  it("yes/no reasons read as sentences (no empty range)", () => {
+    const c = crit({ field: "med:metformin", operator: "present", category: "medication" });
+    const r = evaluateCriterion(c, { "med:metformin": fact(true) }, noAnswers);
+    expect(r.reason).not.toMatch(/within the \./);
+    expect(r.reason).toMatch(/^Your profile shows metformin/);
+  });
+
+  it("keeps acronyms in labels and rounds numbers", () => {
+    const c = crit({ field: "hba1c_pct", operator: "between", valueMin: 7, valueMax: 10.5, unit: "%" });
+    const r = evaluateCriterion(c, { hba1c_pct: fact(8.4444, "%") }, noAnswers);
+    expect(r.reason).toContain("HbA1c");
+    expect(r.reason).toContain("8.4%");
+    expect(r.reason).toContain("7–10.5%");
+  });
+});

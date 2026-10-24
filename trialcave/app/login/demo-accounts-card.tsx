@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { Loader2 } from "lucide-react";
 
 import {
   Card,
@@ -12,7 +13,14 @@ import {
 import { DEMO_ACCOUNTS } from "@/lib/demo/accounts";
 import { demoSignIn } from "./actions";
 
-export function DemoAccountsCard() {
+const ROLE_LABEL = {
+  patient: "Patient",
+  clinic: "Clinic",
+  researcher: "Researcher",
+  admin: "Admin",
+} as const;
+
+export function DemoAccountsCard({ next }: { next?: string }) {
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [active, setActive] = useState<string | null>(null);
@@ -21,19 +29,10 @@ export function DemoAccountsCard() {
     setError(null);
     setActive(email);
     startTransition(async () => {
-      try {
-        await demoSignIn(email);
-      } catch (e) {
-        // redirect() throws a control-flow signal that must be rethrown.
-        if (
-          e &&
-          typeof e === "object" &&
-          "digest" in e &&
-          String((e as { digest: string }).digest).startsWith("NEXT_REDIRECT")
-        ) {
-          throw e;
-        }
-        setError(e instanceof Error ? e.message : "Demo sign-in failed.");
+      // On success the action redirects, so we only get a result back on error.
+      const res = await demoSignIn(email, next);
+      if (res?.error) {
+        setError(res.error);
         setActive(null);
       }
     });
@@ -49,7 +48,7 @@ export function DemoAccountsCard() {
       </CardHeader>
       <CardContent className="space-y-2">
         {error ? (
-          <p role="alert" className="text-sm text-tc-danger">
+          <p role="alert" className="rounded-md bg-tc-danger/10 px-3 py-2 text-sm text-tc-danger">
             {error}
           </p>
         ) : null}
@@ -59,17 +58,26 @@ export function DemoAccountsCard() {
             type="button"
             onClick={() => handleSignIn(a.email)}
             disabled={pending}
-            className="flex w-full flex-col items-start rounded-md border border-border bg-card px-3 py-2 text-left transition-colors hover:bg-muted disabled:opacity-60"
+            aria-busy={active === a.email && pending}
+            className="flex w-full items-start justify-between gap-3 rounded-md border border-border bg-card px-3 py-2 text-left transition-colors hover:border-primary hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-wait disabled:opacity-60"
           >
-            <span className="text-sm font-medium">{a.name}</span>
-            <span className="text-xs text-muted-foreground">{a.blurb}</span>
-            {active === a.email && pending ? (
-              <span className="mt-1 text-xs text-primary">Signing in…</span>
-            ) : null}
+            <span className="flex min-w-0 flex-col">
+              <span className="text-sm font-medium">{a.name}</span>
+              <span className="text-xs text-muted-foreground">{a.blurb}</span>
+            </span>
+            <span className="flex shrink-0 items-center gap-1 text-xs text-muted-foreground">
+              {active === a.email && pending ? (
+                <>
+                  <Loader2 className="size-3 animate-spin" aria-hidden /> Signing in…
+                </>
+              ) : (
+                ROLE_LABEL[a.role]
+              )}
+            </span>
           </button>
         ))}
         <p className="pt-1 text-xs text-muted-foreground">
-          Seed the demo (<code>npm run db:seed</code>) before using these.
+          Not working? Seed the demo first (<code>npm run db:seed</code>).
         </p>
       </CardContent>
     </Card>

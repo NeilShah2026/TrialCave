@@ -1,7 +1,11 @@
-import Link from "next/link";
-
 import { Brand } from "@/components/brand";
+import { NavLinks, type NavLink } from "@/components/nav-links";
 import { SignOutButton } from "@/components/sign-out-button";
+
+const LINKS: NavLink[] = [
+  { href: "/clinic", label: "Studies", exact: true },
+  { href: "/clinic/studies/new", label: "New study" },
+];
 
 export function ClinicNav({ email, clinicName }: { email: string; clinicName?: string }) {
   return (
@@ -11,9 +15,9 @@ export function ClinicNav({ email, clinicName }: { email: string; clinicName?: s
           <Brand href="/clinic" />
           {clinicName ? <span className="text-sm text-muted-foreground">{clinicName}</span> : null}
         </div>
+        <NavLinks links={LINKS} label="Clinic" />
         <div className="flex items-center gap-3">
-          <Link href="/clinic" className="rounded-md px-3 py-1.5 text-sm hover:bg-muted">Studies</Link>
-          <span className="hidden text-sm text-muted-foreground sm:inline">{email}</span>
+          <span className="hidden text-sm text-muted-foreground lg:inline">{email}</span>
           <SignOutButton />
         </div>
       </div>

@@ -12,10 +12,76 @@ import { vocabLabel } from "@/lib/matching/vocabulary";
 
 export type Answer = "yes" | "no" | "unsure";
 
+function formatNumber(n: number): string {
+  return Number.isInteger(n) ? String(n) : String(Math.round(n * 10) / 10);
+}
+
 function displayValue(value: number | boolean | string, unit: string | null): string {
-  if (typeof value === "boolean") return value ? "yes" : "no";
-  if (typeof value === "number") return unit ? `${value}${unit === "%" ? "%" : ` ${unit}`}` : String(value);
+  if (typeof value === "boolean") return value ? "Yes" : "No";
+  if (typeof value === "number") return unit ? `${formatNumber(value)}${unit === "%" ? "%" : ` ${unit}`}` : formatNumber(value);
   return value;
+}
+
+/** Lowercase the first letter unless the label starts with an acronym (HbA1c, BMI, LDL). */
+function lowerFirst(label: string): string {
+  if (/^[A-Z][A-Za-z0-9]*[A-Z0-9]/.test(label.split(" ")[0])) return label;
+  return label.charAt(0).toLowerCase() + label.slice(1);
+}
+
+/** Where a value came from, in plain words, or "" for derived values. */
+function sourcePhrase(documentLabel: string | null, source: string): string {
+  if (documentLabel) return `from your ${documentLabel}`;
+  if (source === "self_report") return "from your answer";
+  if (source === "lab") return "from a lab entry";
+  if (source === "wearable") return "from your device";
+  if (source === "portal") return "from your patient portal";
+  return "";
+}
+
+/** Can this value be compared with this operator at all? */
+function typeCompatible(c: EvalCriterion, value: number | boolean | string): boolean {
+  switch (c.operator) {
+    case "gte":
+    case "lte":
+    case "between":
+      return typeof value === "number";
+    case "present":
+    case "absent":
+      return typeof value === "boolean";
+    case "eq":
+      return c.valueText !== null ? typeof value === "string" : typeof value === "number";
+    default:
+      return false;
+  }
+}
+
+/** One plain-language sentence explaining the result (B9.4). */
+function explain(
+  c: EvalCriterion,
+  label: string,
+  value: number | boolean | string,
+  disp: string,
+  src: string,
+  status: CriterionStatus,
+): string {
+  const from = src ? ` (${src})` : "";
+  if (typeof value === "boolean") {
+    const has = value;
+    const subject = lowerFirst(label);
+    if (c.kind === "inclusion") {
+      if (status === "pass") return has ? `Your profile shows ${subject}${from}.` : `Your profile shows no ${subject}${from}.`;
+      return has ? `Your profile shows ${subject}${from}, which this study doesn't want.` : `Your profile doesn't show ${subject}${from}, which this study requires.`;
+    }
+    return status === "fail"
+      ? `Your profile shows ${subject}${from}, which rules you out of this study.`
+      : `Your profile shows no ${subject}${from}, so this doesn't apply to you.`;
+  }
+  const what = `Your ${lowerFirst(label)} is ${disp}${from}`;
+  const range = rangeText(c);
+  if (c.kind === "inclusion") {
+    return status === "pass" ? `${what}. The study needs ${range}, so you meet this.` : `${what}. The study needs ${range}.`;
+  }
+  return status === "fail" ? `${what}. The study excludes ${range}.` : `${what}, so this doesn't apply to you.`;
 }
 
 /** Evaluate the machine-checkable condition; returns whether the condition holds. */
@@ -55,7 +121,7 @@ function rangeText(c: EvalCriterion): string {
     case "lte":
       return `${c.valueMax}${u} or lower`;
     case "between":
-      return `${c.valueMin}–${c.valueMax}${u} range`;
+      return `${c.valueMin}–${c.valueMax}${u}`;
     case "eq":
       return `${c.valueText ?? c.valueMin}${u}`;
     default:
@@ -115,9 +181,23 @@ export function evaluateCriterion(
       return {
         ...base,
         status: "unknown",
-        reason: `We don't have your ${label.toLowerCase()} yet.`,
+        reason: `We don't have your ${lowerFirst(label)} yet.`,
         source: "none",
         evidence: null,
+        patientValue: null,
+        missingItem: label,
+      };
+    }
+
+    // A value of the wrong type (e.g. text where a number is expected) can't
+    // be compared. That's unknown, never a pass or a fail.
+    if (!typeCompatible(c, fact.value)) {
+      return {
+        ...base,
+        status: "unknown",
+        reason: `We couldn't compare your ${lowerFirst(label)} with this requirement. The study team can check it.`,
+        source: "none",
+        evidence: fact.evidence,
         patientValue: null,
         missingItem: label,
       };
@@ -130,26 +210,8 @@ export function evaluateCriterion(
 
     const value = fact.value;
     const disp = displayValue(value, fact.unit);
-    const evLabel = fact.evidence.documentLabel
-      ? ` (${fact.evidence.documentLabel})`
-      : fact.evidence.source === "self_report"
-        ? " (your answer)"
-        : fact.evidence.source === "lab"
-          ? " (lab)"
-          : "";
-
-    let reason: string;
-    if (c.kind === "inclusion") {
-      reason =
-        status === "pass"
-          ? `Your ${label.toLowerCase()} is ${disp}${evLabel}, within the ${rangeText(c)}.`
-          : `Your ${label.toLowerCase()} is ${disp}${evLabel}, outside the ${rangeText(c)}.`;
-    } else {
-      reason =
-        status === "fail"
-          ? `Your records show ${label.toLowerCase()} (${disp}${evLabel}), which this study excludes.`
-          : `This doesn't apply to you: ${label.toLowerCase()} is ${disp}${evLabel}.`;
-    }
+    const src = sourcePhrase(fact.evidence.documentLabel, fact.evidence.source);
+    const reason = explain(c, label, value, disp, src, status);
 
     return {
       ...base,

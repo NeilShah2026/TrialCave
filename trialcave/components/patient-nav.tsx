@@ -1,35 +1,26 @@
-import Link from "next/link";
-
 import { Brand } from "@/components/brand";
+import { NavLinks, type NavLink } from "@/components/nav-links";
 import { SignOutButton } from "@/components/sign-out-button";
 
-const LINKS = [
-  { href: "/app", label: "Dashboard" },
+const LINKS: NavLink[] = [
+  { href: "/app", label: "Dashboard", exact: true },
   { href: "/app/matches", label: "Matches" },
   { href: "/app/inbox", label: "Inbox" },
   { href: "/app/records", label: "Records" },
   { href: "/app/profile", label: "Profile" },
   { href: "/app/donor", label: "Data Donor" },
+  { href: "/app/settings", label: "Settings" },
+  { href: "/app/privacy", label: "Privacy" },
 ];
 
 export function PatientNav({ email }: { email: string }) {
   return (
-    <header className="border-b border-border bg-card">
+    <header className="border-b border-border bg-card print:hidden">
       <div className="mx-auto flex max-w-[1100px] flex-wrap items-center justify-between gap-2 px-4 py-3">
         <Brand href="/app" />
-        <nav className="flex flex-wrap items-center gap-1">
-          {LINKS.map((l) => (
-            <Link
-              key={l.href}
-              href={l.href}
-              className="rounded-md px-3 py-1.5 text-sm text-foreground hover:bg-muted"
-            >
-              {l.label}
-            </Link>
-          ))}
-        </nav>
+        <NavLinks links={LINKS} label="Patient" />
         <div className="flex items-center gap-3 text-sm text-muted-foreground">
-          <span className="hidden sm:inline">{email}</span>
+          <span className="hidden lg:inline">{email}</span>
           <SignOutButton />
         </div>
       </div>

@@ -8,7 +8,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { TOWN_NAMES } from "@/lib/geo/towns";
 import { SignupForm } from "./signup-form";
+
+export const metadata = { title: "Create an account" };
 
 export default async function SignupPage({
   searchParams,
@@ -27,6 +30,7 @@ export default async function SignupPage({
       </header>
 
       <section className="mx-auto max-w-md px-4 py-10">
+        <h1 className="sr-only">Create a TrialCave account</h1>
         <Card>
           <CardHeader>
             <CardTitle>Create your account</CardTitle>
@@ -36,7 +40,11 @@ export default async function SignupPage({
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <SignupForm initialPath={path} />
+            <SignupForm initialPath={path} towns={TOWN_NAMES} />
+            <p className="mt-4 text-sm text-muted-foreground">
+              Already have an account?{" "}
+              <Link href="/login" className="text-primary hover:underline">Log in</Link>
+            </p>
           </CardContent>
         </Card>
       </section>

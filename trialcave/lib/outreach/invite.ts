@@ -23,6 +23,7 @@ export async function sendInvitations(
     .eq("clinic_id", clinicId)
     .maybeSingle();
   if (!trial) return { sent: 0, error: "Study not found." };
+  if (trial.study_status !== "active") return { sent: 0, error: "This study isn't active, so it can't send invitations." };
   if (!trial.invite_message || !trial.invite_message_attested_at) {
     return { sent: 0, error: "This study needs an IRB-attested invitation before you can send." };
   }

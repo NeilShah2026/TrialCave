@@ -22,43 +22,88 @@ export interface ContactReportCriterion {
 }
 
 export interface ContactReport {
-  displayName: string; // shared first name, or "Participant #xxxxxx"
+  displayName: string; // shared first name, or "Participant #<reference>"
   contactMethod: string | null;
+  phone: string | null;
   town: string | null;
   age: number | null;
   sex: string | null;
+  conditions: string[] | null;
   criteria: ContactReportCriterion[];
 }
 
-const LAB_CATEGORIES = new Set(["lab"]);
+const LAB_CATEGORIES = new Set(["lab", "vital"]);
 
+/** Which share field (if any) governs a criterion's details. */
+function governingField(category: string | undefined, field: string | null, criterionCategory: string): string | null {
+  if (category === "reproductive") return "reproductive_health";
+  if (category && LAB_CATEGORIES.has(category)) return "labs";
+  if (category === "medication") return "medications";
+  if (category === "wearable") return "wearable_summary";
+  if (category === "demographic") return field === "sex" ? "sex" : "age";
+  if (category === "condition" || category === "history") return "condition_summary";
+  // Free-text criteria: reproductive wording is sensitive even without a field.
+  if (/pregnan|breastfeed|lactat|contracept/i.test(criterionCategory)) return "reproductive_health";
+  return null;
+}
+
+/**
+ * @param referenceId A per-invitation/application reference shown when no name
+ *   is shared. DECISION: never derive it from the patient id, so clinics can't
+ *   link the same person across studies.
+ */
 export async function buildContactReport(
   patientId: string,
   trialId: string,
   sharedFields: string[],
+  referenceId: string,
 ): Promise<ContactReport> {
   const admin = createAdminClient();
   const shared = new Set(sharedFields);
 
   const { data: patient } = await admin
     .from("patients")
-    .select("display_name, date_of_birth, sex, town")
+    .select("user_id, display_name, date_of_birth, sex, town")
     .eq("id", patientId)
     .maybeSingle();
 
-  const { data: profile } = await admin
-    .from("profiles")
-    .select("email")
-    .eq("id", (await admin.from("patients").select("user_id").eq("id", patientId).maybeSingle()).data?.user_id ?? "")
-    .maybeSingle();
+  let email: string | null = null;
+  if (shared.has("email") && patient?.user_id) {
+    const { data: profile } = await admin.from("profiles").select("email").eq("id", patient.user_id).maybeSingle();
+    email = profile?.email ?? null;
+  }
 
-  const firstName = patient?.display_name?.split(" ")[0] ?? null;
-  const displayName = shared.has("first_name") && firstName ? firstName : `Participant #${patientId.slice(0, 6)}`;
+  let phone: string | null = null;
+  if (shared.has("phone")) {
+    const { data: phoneFact } = await admin
+      .from("patient_facts")
+      .select("value_text")
+      .eq("patient_id", patientId)
+      .is("field", null)
+      .like("label", "Phone%")
+      .eq("status", "confirmed")
+      .order("created_at", { ascending: false })
+      .limit(1);
+    phone = phoneFact?.[0]?.value_text ?? null;
+  }
 
-  let contactMethod: string | null = null;
-  if (shared.has("email") && profile?.email) contactMethod = profile.email;
+  const names = (patient?.display_name ?? "").split(" ");
+  const nameParts = [shared.has("first_name") ? names[0] : "", shared.has("last_name") ? names.slice(1).join(" ") : ""].filter(Boolean);
+  const displayName = nameParts.length ? nameParts.join(" ") : `Participant #${referenceId}`;
 
   const age = patient?.date_of_birth ? differenceInYears(new Date(), parseISO(patient.date_of_birth)) : null;
+
+  // Condition summary: confirmed diagnosis labels only.
+  let conditions: string[] | null = null;
+  if (shared.has("condition_summary")) {
+    const { data: dx } = await admin
+      .from("patient_current_facts")
+      .select("field, label, value_bool")
+      .eq("patient_id", patientId)
+      .like("field", "dx:%")
+      .eq("value_bool", true);
+    conditions = (dx ?? []).map((d) => d.label as string);
+  }
 
   // Match details for the checklist.
   const { data: match } = await admin
@@ -73,40 +118,43 @@ export async function buildContactReport(
     .filter((d) => d.status !== "na")
     .map((d) => {
       const vocab = d.field ? getVocabField(d.field) : undefined;
-      const icon = d.source === "ai" ? "unknown" : d.status;
+      const gov = governingField(vocab?.category, d.field, `${d.category} ${d.plainText}`);
+      const allowed = gov === null || shared.has(gov);
 
-      let detail: string;
-      if (vocab?.sensitive && !shared.has("reproductive_health")) {
-        detail = "Not shared. Ask the participant directly.";
-      } else if (d.source === "ai") {
-        detail = "Not yet confirmed.";
-      } else if (d.field && LAB_CATEGORIES.has(vocab?.category ?? "") && !shared.has("labs")) {
-        detail = statusWord(d.status); // status only, no value
-      } else if (d.field && vocab?.category === "medication" && !shared.has("medications")) {
-        detail = statusWord(d.status);
-      } else {
-        detail = d.patientValue ? `${statusWord(d.status)} · ${d.patientValue}` : statusWord(d.status);
+      if (vocab?.sensitive || gov === "reproductive_health") {
+        if (!shared.has("reproductive_health")) {
+          return { plainText: d.plainText, kind: d.kind, icon: "unknown" as const, detail: "Not shared. Ask the participant directly." };
+        }
       }
-
-      return { plainText: d.plainText, kind: d.kind, icon: icon as ContactReportCriterion["icon"], detail };
+      if (d.source === "ai") {
+        return { plainText: d.plainText, kind: d.kind, icon: "unknown" as const, detail: "Not yet confirmed." };
+      }
+      if (!allowed) {
+        // The patient didn't share this kind of detail: show status only, no value.
+        return { plainText: d.plainText, kind: d.kind, icon: d.status, detail: statusWord(d.status, d.kind) };
+      }
+      const detail = d.patientValue ? `${statusWord(d.status, d.kind)} · ${d.patientValue}` : statusWord(d.status, d.kind);
+      return { plainText: d.plainText, kind: d.kind, icon: d.status, detail };
     });
 
   return {
     displayName,
-    contactMethod,
+    contactMethod: email,
+    phone,
     town: shared.has("town") ? patient?.town ?? null : null,
     age: shared.has("age") ? age : null,
     sex: shared.has("sex") ? patient?.sex ?? null : null,
+    conditions,
     criteria,
   };
 }
 
-function statusWord(status: string): string {
+function statusWord(status: string, kind: "inclusion" | "exclusion"): string {
   switch (status) {
     case "pass":
-      return "Meets";
+      return kind === "exclusion" ? "Doesn't apply" : "Meets";
     case "fail":
-      return "Does not meet";
+      return kind === "exclusion" ? "Excluded by this" : "Does not meet";
     case "unknown":
       return "Not yet confirmed";
     default:

@@ -41,6 +41,15 @@ export function detectMime(bytes: Uint8Array): MimeType | null {
   return null;
 }
 
+/** A valid calendar date in YYYY-MM-DD that isn't in the future, else null. */
+function safeDate(value: string | null | undefined): string | null {
+  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
+  const d = new Date(`${value}T12:00:00`);
+  if (Number.isNaN(d.getTime()) || d.getTime() > Date.now() + 24 * 60 * 60 * 1000) return null;
+  if (d.getFullYear() < 1900) return null;
+  return value;
+}
+
 function sha256(bytes: Uint8Array): string {
   return createHash("sha256").update(bytes).digest("hex");
 }
@@ -125,12 +134,19 @@ export async function ingestUpload(params: UploadParams): Promise<UploadOutcome>
   const primaryHash = sha256(files[0].bytes);
   const { data: existing } = await admin
     .from("source_documents")
-    .select("id")
+    .select("id, status")
     .eq("patient_id", patientId)
     .eq("sha256", primaryHash)
+    .limit(1)
     .maybeSingle();
   if (existing) {
-    return { documentId: existing.id, status: "needs_review", factCount: 0, reused: true };
+    if (existing.status === "failed" || existing.status === "processing") {
+      // A failed or stuck attempt: clear it so the same file can be retried.
+      await admin.from("patient_facts").delete().eq("document_id", existing.id).eq("status", "pending");
+      await admin.from("source_documents").delete().eq("id", existing.id);
+    } else {
+      return { documentId: existing.id, status: "needs_review", factCount: 0, reused: true };
+    }
   }
 
   // Insert the document row (processing).
@@ -177,6 +193,13 @@ export async function ingestUpload(params: UploadParams): Promise<UploadOutcome>
     return { documentId, status: "failed", factCount: 0, reused: false };
   }
 
+  // AI output is untrusted: keep only real, non-future YYYY-MM-DD dates.
+  record = {
+    ...record,
+    documentDate: safeDate(record.documentDate),
+    facts: record.facts.map((f) => ({ ...f, date: safeDate(f.date) })),
+  };
+
   // For text documents, drop facts whose quote isn't in the text (B10.4).
   let facts = record.facts;
   if (primaryMime === "text/plain") {
@@ -203,7 +226,16 @@ export async function ingestUpload(params: UploadParams): Promise<UploadOutcome>
     source_quote: m.sourceQuote,
     status: "pending" as const,
   }));
-  if (factRows.length) await admin.from("patient_facts").insert(factRows);
+  if (factRows.length) {
+    const { error: factErr } = await admin.from("patient_facts").insert(factRows);
+    if (factErr) {
+      await admin
+        .from("source_documents")
+        .update({ status: "failed", error: "Could not save the items we found." })
+        .eq("id", documentId);
+      return { documentId, status: "failed", factCount: 0, reused: false };
+    }
+  }
 
   await admin
     .from("source_documents")

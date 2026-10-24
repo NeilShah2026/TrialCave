@@ -7,29 +7,80 @@ import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { DATA_TYPES, RESEARCH_TYPES } from "@/lib/patient-options";
 import { updateResearchConsents, type ConsentCell } from "./actions";
 
-const DATA_TYPES = ["wearables", "labs", "imaging", "history"];
-const RESEARCH_TYPES = ["academic", "pharma", "ai", "device"];
+const key = (d: string, r: string) => `${d}:${r}`;
+
+/** Data type × research type grid. Used on the Donor page and the sign-up flow. */
+export function ConsentTable({
+  grid,
+  onToggle,
+  disabled,
+}: {
+  grid: Record<string, boolean>;
+  onToggle: (dataType: string, researchType: string) => void;
+  disabled?: boolean;
+}) {
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full min-w-[420px] text-sm">
+        <caption className="sr-only">Which research each kind of data may support</caption>
+        <thead>
+          <tr className="border-b border-border">
+            <th scope="col" className="p-2 text-left font-medium">Data</th>
+            {RESEARCH_TYPES.map((r) => (
+              <th key={r.value} scope="col" className="p-2 text-center font-medium">{r.label}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {DATA_TYPES.map((d) => (
+            <tr key={d.value} className="border-b border-border last:border-0">
+              <th scope="row" className="p-2 text-left font-normal">{d.label}</th>
+              {RESEARCH_TYPES.map((r) => (
+                <td key={r.value} className="p-2 text-center">
+                  <Checkbox
+                    checked={Boolean(grid[key(d.value, r.value)])}
+                    onCheckedChange={() => onToggle(d.value, r.value)}
+                    disabled={disabled}
+                    aria-label={`Allow ${d.label.toLowerCase()} for ${r.label.toLowerCase()} research`}
+                  />
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
 
 export function ConsentGrid({ initial }: { initial: ConsentCell[] }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const [grid, setGrid] = useState<Record<string, boolean>>(
-    Object.fromEntries(initial.map((c) => [`${c.dataType}:${c.researchType}`, c.allowed])),
+  const initialGrid = Object.fromEntries(initial.map((c) => [key(c.dataType, c.researchType), c.allowed]));
+  const [grid, setGrid] = useState<Record<string, boolean>>(initialGrid);
+  const dirty = DATA_TYPES.some((d) =>
+    RESEARCH_TYPES.some((r) => Boolean(grid[key(d.value, r.value)]) !== Boolean(initialGrid[key(d.value, r.value)])),
   );
 
-  const key = (d: string, r: string) => `${d}:${r}`;
   const toggle = (d: string, r: string) => setGrid((g) => ({ ...g, [key(d, r)]: !g[key(d, r)] }));
 
   function save() {
     const cells: ConsentCell[] = [];
-    for (const d of DATA_TYPES) for (const r of RESEARCH_TYPES) cells.push({ dataType: d, researchType: r, allowed: Boolean(grid[key(d, r)]) });
+    for (const d of DATA_TYPES) for (const r of RESEARCH_TYPES) cells.push({ dataType: d.value, researchType: r.value, allowed: Boolean(grid[key(d.value, r.value)]) });
     startTransition(async () => {
-      const res = await updateResearchConsents(cells);
-      if (res.ok) {
-        toast.success("Changes apply to future analyses.");
+      try {
+        const res = await updateResearchConsents(cells);
+        if (!res.ok) {
+          toast.error(res.error ?? "Couldn't save.");
+          return;
+        }
+        toast.success("Saved. Changes apply to future analyses.");
         router.refresh();
+      } catch {
+        toast.error("Couldn't save. Try again.");
       }
     });
   }
@@ -38,27 +89,15 @@ export function ConsentGrid({ initial }: { initial: ConsentCell[] }) {
     <Card>
       <CardContent className="pt-6">
         <h2 className="text-lg font-semibold">What you allow</h2>
-        <p className="text-sm text-muted-foreground">Choose which research your donation supports. Changes apply to future analyses only.</p>
-        <div className="mt-4 overflow-x-auto">
-          <table className="text-sm">
-            <thead>
-              <tr><th className="p-2 text-left">Data</th>{RESEARCH_TYPES.map((r) => <th key={r} className="p-2 capitalize">{r}</th>)}</tr>
-            </thead>
-            <tbody>
-              {DATA_TYPES.map((d) => (
-                <tr key={d}>
-                  <td className="p-2 capitalize">{d}</td>
-                  {RESEARCH_TYPES.map((r) => (
-                    <td key={r} className="p-2 text-center">
-                      <Checkbox checked={Boolean(grid[key(d, r)])} onCheckedChange={() => toggle(d, r)} />
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <p className="text-sm text-muted-foreground">
+          Choose which research your donation supports. Changes apply to future analyses only.
+        </p>
+        <div className="mt-4">
+          <ConsentTable grid={grid} onToggle={toggle} disabled={pending} />
         </div>
-        <Button className="mt-4" onClick={save} disabled={pending}>{pending ? "Saving…" : "Save consent"}</Button>
+        <Button className="mt-4" onClick={save} disabled={pending || !dirty}>
+          {pending ? "Saving…" : "Save choices"}
+        </Button>
       </CardContent>
     </Card>
   );

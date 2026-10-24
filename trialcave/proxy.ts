@@ -14,14 +14,54 @@ const ROLE_PREFIX: Array<{ prefix: string; role: Role }> = [
   { prefix: "/admin", role: "admin" },
 ];
 
+/**
+ * DECISION (S6, revised): the old static CSP (`script-src 'self'`) blocked the
+ * inline bootstrap scripts Next.js emits, so React never hydrated and no
+ * client-side button worked. We now issue a per-request nonce here; Next reads
+ * it from the request's CSP header and stamps it on every framework script.
+ * `'strict-dynamic'` lets those trusted scripts load their chunks. Dev needs
+ * `'unsafe-eval'` (React debug stacks) and a websocket for HMR.
+ */
+function buildCsp(nonce: string): string {
+  const isDev = process.env.NODE_ENV === "development";
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+  return [
+    "default-src 'self'",
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDev ? " 'unsafe-eval'" : ""}`,
+    "style-src 'self' 'unsafe-inline'",
+    `img-src 'self' data: blob: ${supabaseUrl}`.trim(),
+    "font-src 'self' data:",
+    `connect-src 'self' ${supabaseUrl}${isDev ? " ws: wss:" : ""}`.trim(),
+    "object-src 'none'",
+    "frame-ancestors 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+  ].join("; ");
+}
+
 export async function proxy(request: NextRequest) {
-  let response = NextResponse.next({ request });
+  const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
+  const csp = buildCsp(nonce);
+
+  // Forward the nonce + CSP on the request so the renderer can apply it.
+  const forward = () => {
+    const headers = new Headers(request.headers);
+    headers.set("x-nonce", nonce);
+    headers.set("Content-Security-Policy", csp);
+    return NextResponse.next({ request: { headers } });
+  };
+  const withCsp = <T extends NextResponse>(res: T): T => {
+    res.headers.set("Content-Security-Policy", csp);
+    return res;
+  };
+
+  let response = forward();
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   // If Supabase isn't configured yet (early demo setup), don't block routing.
-  if (!url || !anonKey) return response;
+  if (!url || !anonKey) return withCsp(response);
 
   const supabase = createServerClient(url, anonKey, {
     cookies: {
@@ -29,10 +69,8 @@ export async function proxy(request: NextRequest) {
         return request.cookies.getAll();
       },
       setAll(cookiesToSet) {
-        cookiesToSet.forEach(({ name, value }) =>
-          request.cookies.set(name, value),
-        );
-        response = NextResponse.next({ request });
+        cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+        response = forward();
         cookiesToSet.forEach(({ name, value, options }) =>
           response.cookies.set(name, value, options),
         );
@@ -49,13 +87,13 @@ export async function proxy(request: NextRequest) {
     (r) => path === r.prefix || path.startsWith(`${r.prefix}/`),
   );
 
-  if (!match) return response;
+  if (!match) return withCsp(response);
 
   // Protected route. Require a session.
   if (!user) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("next", path);
-    return NextResponse.redirect(loginUrl);
+    return withCsp(NextResponse.redirect(loginUrl));
   }
 
   // Check the role against the route's required role.
@@ -69,15 +107,14 @@ export async function proxy(request: NextRequest) {
 
   if (!role) {
     // Signed in but no profile: send to login to resolve.
-    const loginUrl = new URL("/login", request.url);
-    return NextResponse.redirect(loginUrl);
+    return withCsp(NextResponse.redirect(new URL("/login", request.url)));
   }
 
   if (role !== match.role) {
-    return NextResponse.redirect(new URL(ROLE_HOME[role], request.url));
+    return withCsp(NextResponse.redirect(new URL(ROLE_HOME[role], request.url)));
   }
 
-  return response;
+  return withCsp(response);
 }
 
 export const config = {

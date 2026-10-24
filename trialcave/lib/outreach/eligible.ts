@@ -124,21 +124,30 @@ export async function computeOutreach(admin: Admin, trialId: string): Promise<Ou
 }
 
 export interface OutreachCount {
-  total: number;
-  strong: number;
-  possible: number;
+  /** Exact counts, or null when below the floor (never sent to the browser). */
+  total: number | null;
+  strong: number | null;
+  possible: number | null;
   /** True if the count is below the floor and should be shown as "fewer than N". */
   belowFloor: boolean;
+  /** Whether anyone at all is eligible (so the Send button can be enabled). */
+  any: boolean;
+  floor: number;
 }
 
 export async function getOutreachCount(trialId: string): Promise<OutreachCount> {
   const admin = createAdminClient();
   const r = await computeOutreach(admin, trialId);
   const total = r.eligiblePatientIds.length;
+  const belowFloor = total < OUTREACH_COUNT_FLOOR;
+  // DECISION: mask small counts on the server so the exact number never
+  // reaches the clinic's browser (RSC payload included).
   return {
-    total,
-    strong: r.strongCount,
-    possible: r.possibleCount,
-    belowFloor: total < OUTREACH_COUNT_FLOOR,
+    total: belowFloor ? null : total,
+    strong: belowFloor ? null : r.strongCount,
+    possible: belowFloor ? null : r.possibleCount,
+    belowFloor,
+    any: total > 0,
+    floor: OUTREACH_COUNT_FLOOR,
   };
 }

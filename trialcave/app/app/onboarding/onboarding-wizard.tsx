@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
@@ -28,7 +29,7 @@ const CONDITION_CATEGORIES = [
 const DATA_TYPES = ["wearables", "labs", "imaging", "history"];
 const RESEARCH_TYPES = ["academic", "pharma", "ai", "device"];
 
-export function OnboardingWizard({ towns, defaultName }: { towns: string[]; defaultName: string }) {
+export function OnboardingWizard({ towns, defaultName, donorPath = false }: { towns: string[]; defaultName: string; donorPath?: boolean }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [step, setStep] = useState(1);
@@ -39,9 +40,9 @@ export function OnboardingWizard({ towns, defaultName }: { towns: string[]; defa
     dateOfBirth: "",
     sex: "female",
     town: towns[0] ?? "",
-    travelRadiusMiles: 25,
+    travelRadiusMiles: 20,
     preferredLanguage: "en",
-    isDonor: false,
+    isDonor: donorPath,
     allowInvitations: false,
     conditionCategories: [],
     researchConsents: [],
@@ -84,14 +85,20 @@ export function OnboardingWizard({ towns, defaultName }: { towns: string[]; defa
 
   function submit() {
     startTransition(async () => {
-      const res = await completeOnboarding(form);
-      if (!res.ok) {
-        toast.error(res.error ?? "Could not finish onboarding.");
-        return;
+      try {
+        const res = await completeOnboarding(form);
+        if (!res.ok) {
+          toast.error(res.error ?? "Could not finish onboarding.");
+          return;
+        }
+        toast.success("You're all set.");
+        router.push("/app");
+        router.refresh();
+      } catch (e) {
+        // A duplicate onboarding redirects to /app; let that through.
+        if (e && typeof e === "object" && "digest" in e) throw e;
+        toast.error("Could not finish onboarding. Try again.");
       }
-      toast.success("You're all set.");
-      router.push("/app");
-      router.refresh();
     });
   }
 
@@ -108,36 +115,36 @@ export function OnboardingWizard({ towns, defaultName }: { towns: string[]; defa
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="dob">Date of birth</Label>
-            <Input id="dob" type="date" value={form.dateOfBirth} onChange={(e) => set("dateOfBirth", e.target.value)} />
+            <Input id="dob" type="date" min="1900-01-01" value={form.dateOfBirth} onChange={(e) => set("dateOfBirth", e.target.value)} />
             <p className="text-xs text-muted-foreground">TrialCave is for adults 18 and older.</p>
           </div>
-          <div className="space-y-1.5">
-            <Label>Sex assigned at birth</Label>
+          <fieldset className="space-y-1.5">
+            <legend className="text-sm font-medium">Sex assigned at birth</legend>
             <p className="text-xs text-muted-foreground">Trials use this to check eligibility.</p>
             <div className="flex gap-2">
               {(["female", "male"] as const).map((s) => (
-                <Button key={s} type="button" variant={form.sex === s ? "default" : "outline"} size="sm" onClick={() => set("sex", s)}>
+                <Button key={s} type="button" variant={form.sex === s ? "default" : "outline"} size="sm" aria-pressed={form.sex === s} onClick={() => set("sex", s)}>
                   {s === "female" ? "Female" : "Male"}
                 </Button>
               ))}
             </div>
-          </div>
+          </fieldset>
           <div className="space-y-1.5">
             <Label htmlFor="town">Town</Label>
             <select id="town" value={form.town} onChange={(e) => set("town", e.target.value)} className="h-10 w-full rounded-md border border-border bg-card px-3 text-sm">
               {towns.map((t) => <option key={t} value={t}>{t}</option>)}
             </select>
           </div>
-          <div className="space-y-1.5">
-            <Label>How far would you travel?</Label>
+          <fieldset className="space-y-1.5">
+            <legend className="text-sm font-medium">How far would you travel?</legend>
             <div className="flex gap-2">
               {RADII.map((r) => (
-                <Button key={r} type="button" variant={form.travelRadiusMiles === r ? "default" : "outline"} size="sm" onClick={() => set("travelRadiusMiles", r)}>
+                <Button key={r} type="button" variant={form.travelRadiusMiles === r ? "default" : "outline"} size="sm" aria-pressed={form.travelRadiusMiles === r} onClick={() => set("travelRadiusMiles", r)}>
                   {r} mi
                 </Button>
               ))}
             </div>
-          </div>
+          </fieldset>
           <div className="space-y-1.5">
             <Label htmlFor="lang">Language</Label>
             <select id="lang" value={form.preferredLanguage} onChange={(e) => set("preferredLanguage", e.target.value as OnboardingInput["preferredLanguage"])} className="h-10 w-full rounded-md border border-border bg-card px-3 text-sm">
@@ -157,7 +164,12 @@ export function OnboardingWizard({ towns, defaultName }: { towns: string[]; defa
           </p>
           <label className="flex items-start gap-3 text-sm">
             <Checkbox checked={agreedTerms} onCheckedChange={(v) => setAgreedTerms(Boolean(v))} />
-            <span>I agree to the Terms and have read the Privacy Notice.</span>
+            <span>
+              I agree to the{" "}
+              <Link href="/legal/terms" target="_blank" className="text-primary hover:underline">Terms</Link>{" "}
+              and have read the{" "}
+              <Link href="/legal/privacy" target="_blank" className="text-primary hover:underline">Privacy Notice</Link>.
+            </span>
           </label>
         </div>
       ) : null}
@@ -179,7 +191,11 @@ export function OnboardingWizard({ towns, defaultName }: { towns: string[]; defa
             <div className="space-y-4 rounded-md border border-border p-4">
               <label className="flex items-start gap-3 text-sm">
                 <Checkbox checked={agreedDonor} onCheckedChange={(v) => setAgreedDonor(Boolean(v))} />
-                <span>I agree to the Data Donor Agreement. I can withdraw anytime.</span>
+                <span>
+                  I agree to the{" "}
+                  <Link href="/legal/donor-agreement" target="_blank" className="text-primary hover:underline">Data Donor Agreement</Link>.
+                  I can withdraw anytime.
+                </span>
               </label>
               <div>
                 <p className="text-sm font-medium">Choose what you allow (all off by default)</p>
