@@ -35,12 +35,15 @@ export function serviceRoleKey(): string {
   return required("SUPABASE_SERVICE_ROLE_KEY", process.env.SUPABASE_SERVICE_ROLE_KEY);
 }
 
+// Getters read process.env live. In Next.js NEXT_PUBLIC_* are inlined at build
+// time; in CLI scripts (tsx) they're populated by dotenv at runtime, after this
+// module is imported, so we must not capture them at module-load time.
 export function supabaseUrl(): string {
-  return required("NEXT_PUBLIC_SUPABASE_URL", SUPABASE_URL);
+  return required("NEXT_PUBLIC_SUPABASE_URL", process.env.NEXT_PUBLIC_SUPABASE_URL);
 }
 
 export function supabaseAnonKey(): string {
-  return required("NEXT_PUBLIC_SUPABASE_ANON_KEY", SUPABASE_ANON_KEY);
+  return required("NEXT_PUBLIC_SUPABASE_ANON_KEY", process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 }
 
 export function anthropicApiKey(): string {
