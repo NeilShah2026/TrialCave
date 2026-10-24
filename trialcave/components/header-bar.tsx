@@ -47,6 +47,15 @@ export function HeaderBar({
   const [menuOpen, setMenuOpen] = useState(false);
   const [pending, startTransition] = useTransition();
   const langRef = useRef<HTMLDivElement>(null);
+  const stripRef = useRef<HTMLDivElement>(null);
+
+  // Keep the current tab visible in the small-screen tab strip.
+  useEffect(() => {
+    const strip = stripRef.current;
+    const tab = strip?.querySelector<HTMLElement>("[data-active]");
+    if (!strip || !tab) return;
+    strip.scrollLeft = tab.offsetLeft - (strip.clientWidth - tab.offsetWidth) / 2;
+  }, [pathname]);
 
   useEffect(() => {
     if (variant !== "home") return;
@@ -77,8 +86,10 @@ export function HeaderBar({
     };
   }, [langOpen]);
 
-  // Crowded navs (the patient area has 7 links) switch to the phone menu earlier.
+  // Crowded navs (the patient area has 7 links) tighten up so they still fit at 1024px.
   const many = links.length > 4;
+  // Signed-in role areas: always show tabs (row on laptops, strip below on small screens).
+  const area = !!account?.inArea;
   const solid = variant === "solid" || pastHero;
   const night = !solid && scrolled;
   const dark = !solid; // white text over the hero / night bar
@@ -126,9 +137,15 @@ export function HeaderBar({
             ) : null}
           </div>
 
-          <span aria-hidden className={cn("h-8 w-px shrink-0 bg-current opacity-15", many ? "hidden xl:block" : "hidden lg:block")} />
+          <span aria-hidden className="hidden h-8 w-px shrink-0 bg-current opacity-15 lg:block" />
 
-          <nav aria-label="Main" className={cn("items-center gap-[clamp(18px,1.9vw,34px)]", many ? "hidden xl:flex" : "hidden lg:flex")}>
+          <nav
+            aria-label="Main"
+            className={cn(
+              "hidden items-center lg:flex",
+              many ? "gap-[clamp(14px,1.45vw,32px)]" : "gap-[clamp(18px,1.9vw,34px)]",
+            )}
+          >
             {links.map((l) => {
               const active = isActive(l);
               return (
@@ -137,7 +154,8 @@ export function HeaderBar({
                   href={l.href}
                   aria-current={active ? "page" : undefined}
                   className={cn(
-                    "whitespace-nowrap rounded-md py-2 text-[1.02rem] font-semibold underline-offset-[6px] hover:underline",
+                    "whitespace-nowrap rounded-md py-2 font-semibold underline-offset-[6px] hover:underline",
+                    many ? "text-[0.98rem] xl:text-[1.02rem]" : "text-[1.02rem]",
                     active ? (dark ? "text-tc-mint underline decoration-2" : "text-tc-primary-ink underline decoration-2") : "opacity-95",
                   )}
                 >
@@ -181,17 +199,17 @@ export function HeaderBar({
             </div>
 
             {account ? (
-              <div className={cn("items-center gap-4", many ? "hidden xl:flex" : "hidden lg:flex")}>
+              <div className={cn("items-center gap-4", area ? "flex" : "hidden lg:flex")}>
                 <span className={cn("hidden max-w-[16rem] truncate text-[0.95rem] 2xl:inline", dark ? "text-tc-night-text" : "text-tc-muted")}>{account.email}</span>
                 {!account.inArea ? (
                   <Link href={account.homeHref} className={cn("inline-flex min-h-12 items-center rounded-xl px-5 text-[1rem] font-bold", dark ? "bg-white text-tc-ink" : "bg-tc-primary text-white hover:bg-tc-primary-ink")}>
                     My account
                   </Link>
                 ) : null}
-                <SignOutButton tone={dark ? "light" : "dark"} />
+                <SignOutButton tone={dark ? "light" : "dark"} compact={area} />
               </div>
             ) : (
-              <div className={cn("items-center gap-2", many ? "hidden xl:flex" : "hidden lg:flex")}>
+              <div className="hidden items-center gap-2 lg:flex">
                 <Link href="/login" className="whitespace-nowrap rounded-[10px] px-3.5 py-3 text-[1.02rem] font-bold hover:bg-[rgba(127,127,127,.14)]">
                   Log in
                 </Link>
@@ -204,28 +222,55 @@ export function HeaderBar({
               </div>
             )}
 
-            <button
-              type="button"
-              onClick={() => setMenuOpen((o) => !o)}
-              aria-expanded={menuOpen}
-              aria-controls="mobile-menu"
-              className={cn("inline-flex min-h-12 items-center gap-2 rounded-xl border-2 border-current px-4 text-[1rem] font-bold", many ? "xl:hidden" : "lg:hidden")}
-            >
-              {menuOpen ? <X className="size-5" aria-hidden /> : <Menu className="size-5" aria-hidden />}
-              Menu
-            </button>
+            {/* Signed-in areas use the tab strip below instead of a dropdown. */}
+            {!area ? (
+              <button
+                type="button"
+                onClick={() => setMenuOpen((o) => !o)}
+                aria-expanded={menuOpen}
+                aria-controls="mobile-menu"
+                className="inline-flex min-h-12 items-center gap-2 rounded-xl border-2 border-current px-4 text-[1rem] font-bold lg:hidden"
+              >
+                {menuOpen ? <X className="size-5" aria-hidden /> : <Menu className="size-5" aria-hidden />}
+                Menu
+              </button>
+            ) : null}
           </div>
         </div>
       </header>
 
-      {menuOpen ? (
+      {area ? (
+        <nav
+          aria-label="Sections"
+          className="border-b border-tc-border bg-white shadow-[0_1px_0_var(--tc-border)] lg:hidden"
+        >
+          <div ref={stripRef} className="flex gap-1.5 overflow-x-auto px-[clamp(12px,3vw,40px)] py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {links.map((l) => {
+              const active = isActive(l);
+              return (
+                <Link
+                  key={l.href}
+                  href={l.href}
+                  aria-current={active ? "page" : undefined}
+                  data-active={active || undefined}
+                  className={cn(
+                    "inline-flex min-h-11 shrink-0 items-center whitespace-nowrap rounded-full px-4 text-[0.98rem] font-bold transition-colors",
+                    active ? "bg-tc-primary text-white" : "text-tc-ink-2 hover:bg-tc-mist hover:text-tc-ink",
+                  )}
+                >
+                  {l.label}
+                </Link>
+              );
+            })}
+          </div>
+        </nav>
+      ) : null}
+
+      {menuOpen && !area ? (
         <nav
           id="mobile-menu"
           aria-label="Menu"
-          className={cn(
-            "absolute inset-x-0 top-full z-40 max-h-[calc(100vh-5rem)] overflow-y-auto bg-white px-[clamp(20px,4vw,72px)] pb-7 pt-3 text-tc-ink shadow-[0_30px_40px_-20px_rgba(0,0,0,.3)]",
-            many ? "xl:hidden" : "lg:hidden",
-          )}
+          className="absolute inset-x-0 top-full z-40 max-h-[calc(100vh-5rem)] overflow-y-auto bg-white px-[clamp(20px,4vw,72px)] pb-7 pt-3 text-tc-ink shadow-[0_30px_40px_-20px_rgba(0,0,0,.3)] lg:hidden"
         >
           {roleLabel ? <p className="pb-1 pt-2 text-[0.95rem] font-bold text-tc-primary-ink">{roleLabel}</p> : null}
           {links.map((l) => (

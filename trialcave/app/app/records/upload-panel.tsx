@@ -119,7 +119,7 @@ export function UploadPanel({ demoMode }: { demoMode: boolean }) {
               <Upload aria-hidden /> Upload a file
             </Button>
             {demoMode ? (
-              <Button type="button" variant="ghost" onClick={downloadSample} disabled={pending}>
+              <Button type="button" variant="ghost" onClick={downloadSample} disabled={pending} className="whitespace-normal text-left">
                 <Download aria-hidden /> Download a sample visit summary
               </Button>
             ) : null}
